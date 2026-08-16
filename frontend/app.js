@@ -166,7 +166,8 @@ async function verResultados() {
 
   try {
     const data = await apiPost("/api/recomendar", { perfil_riasec: estado.perfilRiasec, preferencias });
-    renderResultados(data.resultados);
+    renderResultados(data.resultados.filter((r) => r.tier !== "alejada"));
+    renderDiagrama(data.resultados);
   } catch (e) {
     cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
   }
@@ -198,6 +199,111 @@ function renderResultados(resultados) {
       </div>`;
     cont.appendChild(div);
   });
+}
+
+// ---------- Diagrama de afinidad (círculos concéntricos, tipo Euler) ----------
+const CENTRO_DIAGRAMA = 170;
+const BANDAS_TIER = {
+  nucleo: [0, 58],
+  intermedio: [58, 122],
+  alejada: [122, 162],
+};
+const NOMBRE_TIER = {
+  nucleo: "Núcleo afín",
+  intermedio: "Afinidad intermedia",
+  alejada: "Más alejada",
+};
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~137.5°, distribución tipo girasol
+
+function escaparHtml(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto;
+  return div.innerHTML;
+}
+
+function ubicarPuntosEnBanda(lista, [radioMin, radioMax]) {
+  const n = lista.length;
+  return lista.map((resultado, i) => {
+    // sqrt reparte los puntos por área (no por radio) para que no se
+    // amontonen cerca del borde interno de la banda.
+    const fraccionRadio = n <= 1 ? 0.5 : Math.sqrt((i + 0.5) / n);
+    const radio = radioMin + fraccionRadio * (radioMax - radioMin);
+    const angulo = i * GOLDEN_ANGLE;
+    return {
+      resultado,
+      x: CENTRO_DIAGRAMA + radio * Math.cos(angulo),
+      y: CENTRO_DIAGRAMA + radio * Math.sin(angulo),
+    };
+  });
+}
+
+function renderDiagrama(resultados) {
+  const cont = document.getElementById("diagrama-afinidad");
+  const leyenda = document.getElementById("dv-leyenda");
+  if (!resultados.length) {
+    cont.innerHTML = "";
+    leyenda.innerHTML = "";
+    return;
+  }
+
+  const porTier = { nucleo: [], intermedio: [], alejada: [] };
+  resultados.forEach((r) => (porTier[r.tier] || porTier.alejada).push(r));
+  Object.values(porTier).forEach((lista) => lista.sort((a, b) => b.score_final - a.score_final));
+
+  const puntos = ["nucleo", "intermedio", "alejada"].flatMap((tier) =>
+    ubicarPuntosEnBanda(porTier[tier], BANDAS_TIER[tier])
+  );
+
+  const anillos = Object.values(BANDAS_TIER)
+    .map(([, radioMax]) => `<circle class="dv-anillo" cx="${CENTRO_DIAGRAMA}" cy="${CENTRO_DIAGRAMA}" r="${radioMax}" />`)
+    .join("");
+
+  const puntosSvg = puntos
+    .map(({ resultado, x, y }, i) => {
+      const cx = x.toFixed(1);
+      const cy = y.toFixed(1);
+      const titulo = `${escaparHtml(resultado.NOMBRE_CARRERA)} — ${Math.round(resultado.similitud_riasec * 100)}% afinidad`;
+      return `
+        <circle class="dv-punto ${resultado.tier}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
+        <circle class="dv-punto-hit" cx="${cx}" cy="${cy}" r="12" data-idx="${i}" />`;
+    })
+    .join("");
+
+  cont.innerHTML = `
+    <svg viewBox="0 0 340 340" role="img" aria-label="Diagrama de afinidad de carreras recomendadas">
+      ${anillos}
+      ${puntosSvg}
+      <circle class="dv-centro" cx="${CENTRO_DIAGRAMA}" cy="${CENTRO_DIAGRAMA}" r="3.5" />
+    </svg>`;
+
+  cont.querySelectorAll("[data-idx]").forEach((el) => {
+    const { resultado } = puntos[Number(el.dataset.idx)];
+    el.addEventListener("mouseenter", () => mostrarDetalleDiagrama(resultado));
+    el.addEventListener("click", () => mostrarDetalleDiagrama(resultado));
+  });
+
+  renderLeyendaDiagrama(resultados);
+}
+
+function mostrarDetalleDiagrama(r) {
+  const cont = document.getElementById("dv-detalle");
+  cont.innerHTML = `
+    <h4>${titleCase(r.NOMBRE_CARRERA)}</h4>
+    <div class="ies">${titleCase(r.NOMBRE_IES)} · ${titleCase(r.CANTÓN)}, ${titleCase(r.PROVINCIA)}</div>
+    <div class="etiquetas">
+      <span class="tag">${titleCase(r.CAMPO_AMPLIO_NORMALIZADO)}</span>
+      <span class="tag">${NOMBRE_TIER[r.tier]}</span>
+      <span class="tag">Afinidad ${Math.round(r.similitud_riasec * 100)}%</span>
+    </div>`;
+}
+
+function renderLeyendaDiagrama(resultados) {
+  const cont = document.getElementById("dv-leyenda");
+  const nAlejada = resultados.filter((r) => r.tier === "alejada").length;
+  cont.innerHTML = `
+    <div class="item"><span class="swatch" style="background:var(--tier-nucleo)"></span>Núcleo afín</div>
+    <div class="item"><span class="swatch" style="background:var(--tier-intermedio)"></span>Afinidad intermedia</div>
+    <div class="item"><span class="swatch" style="background:var(--tier-alejada)"></span>Más alejadas (máx. ${nAlejada})</div>`;
 }
 
 // ---------- Navegación ----------

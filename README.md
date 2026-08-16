@@ -25,7 +25,10 @@ backend/
   test_riasec.py              60 ítems del test RIASEC (traducidos del O*NET Interest Profiler)
   main.py                     API FastAPI: expone el test y el motor de recomendación
 frontend/
-  index.html, app.js, styles.css   App web (vanilla JS) que consume la API
+  index.html, app.js, styles.css   App web (vanilla JS) que consume la API:
+                                    test -> preferencias -> resultados (lista +
+                                    "Mapa de afinidad", diagrama de círculos
+                                    concéntricos por tier)
 tests/
   test_e2e_frontend.py        Prueba de humo de punta a punta con Playwright
 docs/
@@ -58,7 +61,10 @@ dominio, define `window.API_BASE` antes de cargar `app.js` (por defecto apunta a
 - `GET /api/test-riasec` — los 60 ítems del test (sin revelar su dimensión) + info de las 6 dimensiones.
 - `POST /api/calcular-perfil` — `{"respuestas": {"R1": true, "I1": false, ...}}` -> puntaje 0-1 por dimensión.
 - `GET /api/opciones` — valores disponibles para los filtros (modalidad, financiamiento, provincia/cantón, etc.).
-- `POST /api/recomendar` — `{"perfil_riasec": {...}, "preferencias": {...}}` -> lista de carreras recomendadas.
+- `POST /api/recomendar` — `{"perfil_riasec": {...}, "preferencias": {...}}` -> lista de
+  carreras recomendadas, cada una con `tier` (`nucleo`/`intermedio`/`alejada`) para el
+  diagrama de afinidad. `preferencias.top_n` controla el tamaño de núcleo+intermedio; el
+  tope del anillo "alejada" es fijo (`cap_alejada`, ver `Preferencias` en el motor).
 
 Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras la API corre.
 
@@ -75,9 +81,15 @@ Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras 
 3. **Cercanía geográfica** (fórmula de Haversine sobre `cantones_coordenadas.csv`):
    se combina con la similitud RIASEC según el peso que el estudiante le dé a "vivir
    cerca" (0 = indiferente, 1 = solo importa la cercanía).
-4. **Diversificación** del top-N: reparte los resultados por turnos entre los campos
+4. **Diversificación + tiers**: reparte los resultados por turnos entre los campos
    amplios presentes en el pool (evita devolver 10 variantes de la misma oferta;
-   ver nota de diseño en el propio código sobre por qué no se usa KMeans acá).
+   ver nota de diseño en el propio código sobre por qué no se usa KMeans acá) y
+   etiqueta cada fila con `tier` (`nucleo` / `intermedio` / `alejada`) según en qué
+   posición quedó su campo amplio en el ranking: los campos mejor puntuados forman
+   el núcleo, los siguientes la afinidad intermedia, y el resto cae en "alejada"
+   con un tope propio (`cap_alejada`, 20 por defecto) sin mínimo de similitud. El
+   frontend usa `tier` para el "Mapa de afinidad" (diagrama de círculos
+   concéntricos en la pantalla de resultados).
 5. **Exploración por clústeres** (`sklearn.cluster.KMeans`, método aparte
    `explorar_clusters_vocacionales`): agrupa todas las carreras únicas en clústeres
    vocacionales, pensado para una vista de "explora por familia de interés" en el
@@ -115,16 +127,30 @@ python tests/test_e2e_frontend.py
 Completa el test con respuestas simuladas, navega las 3 pantallas, verifica que la API
 responda y guarda una captura en `docs/screenshot_resultados.png`.
 
+> `test_e2e_frontend.py` lanza Chromium con `executable_path="/opt/pw-browsers/chromium"`
+> (ruta fija del entorno sandbox original). En Windows/otro entorno, corré
+> `playwright install chromium` y cambiá esa línea a `p.chromium.launch()` (sin
+> `executable_path`) para que use el navegador que Playwright ya tiene cacheado.
+
+## Deploy
+
+- **Frontend**: Vercel, proyecto `tucarrera-ecuador` (ver `frontend/.vercel/project.json`).
+- **Backend**: Render, expuesto en `https://tucarreraecuador.onrender.com` (ver
+  `frontend/config.js`, que fija `window.API_BASE` a esa URL en producción). Para
+  desarrollo local hay que sobreescribir `config.js` o cargar `window.API_BASE` antes de
+  `app.js` apuntando a tu API local.
+
 ## Próximos pasos
 
 1. Añadir una fase de aprendizaje supervisado (`DecisionTreeClassifier` /
    `RandomForestClassifier`) que reentrene el re-ranking con retroalimentación real de
    usuarios ("me interesó" / "no me interesó").
 2. Enriquecer el vector RIASEC por carrera individual (hoy es por campo amplio) usando,
-   por ejemplo, similitud de texto sobre `NOMBRE_CARRERA`.
+   por ejemplo, similitud de texto sobre `NOMBRE_CARRERA` — hoy todas las carreras de un
+   mismo campo amplio comparten posición en el "Mapa de afinidad", una señal más fina
+   permitiría separarlas dentro del mismo anillo.
 3. Validar el mapeo RIASEC↔campo amplio con un orientador vocacional.
-4. Desplegar la API y el frontend (por ahora solo pensados para correr en local).
-5. Migrar las coordenadas de cantones a la fuente oficial del INEC/IGM.
+4. Migrar las coordenadas de cantones a la fuente oficial del INEC/IGM.
 
 ## Fuente de los datos
 
