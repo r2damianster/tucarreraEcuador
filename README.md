@@ -127,10 +127,9 @@ python tests/test_e2e_frontend.py
 Completa el test con respuestas simuladas, navega las 3 pantallas, verifica que la API
 responda y guarda una captura en `docs/screenshot_resultados.png`.
 
-> `test_e2e_frontend.py` lanza Chromium con `executable_path="/opt/pw-browsers/chromium"`
-> (ruta fija del entorno sandbox original). En Windows/otro entorno, corré
-> `playwright install chromium` y cambiá esa línea a `p.chromium.launch()` (sin
-> `executable_path`) para que use el navegador que Playwright ya tiene cacheado.
+> `test_e2e_frontend.py` usa el Chromium que Playwright tiene cacheado (`playwright
+> install chromium` si no lo corriste todavía); solo si necesitás forzar otro binario,
+> seteá la variable de entorno `PLAYWRIGHT_CHROMIUM_PATH`.
 
 ## Deploy
 

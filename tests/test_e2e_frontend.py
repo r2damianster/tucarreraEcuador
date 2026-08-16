@@ -9,6 +9,7 @@ Requiere tener corriendo antes:
 
 Uso: python tests/test_e2e_frontend.py
 """
+import os
 import time
 from pathlib import Path
 
@@ -17,8 +18,13 @@ from playwright.sync_api import sync_playwright
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 DOCS_DIR.mkdir(exist_ok=True)
 
+# En el sandbox original, Chromium vive en una ruta fija; en un entorno normal
+# (con `playwright install chromium` corrido), se usa el que Playwright ya
+# tiene cacheado. Configurable con PLAYWRIGHT_CHROMIUM_PATH si hace falta otra ruta.
+CHROMIUM_PATH = os.environ.get("PLAYWRIGHT_CHROMIUM_PATH")
+
 with sync_playwright() as p:
-    browser = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
+    browser = p.chromium.launch(executable_path=CHROMIUM_PATH) if CHROMIUM_PATH else p.chromium.launch()
     page = browser.new_page(viewport={"width": 900, "height": 1000})
     errores_consola = []
     page.on("console", lambda msg: errores_consola.append(msg.text) if msg.type == "error" else None)
