@@ -5,7 +5,14 @@ Combina:
   1. Filtro duro por preferencias obligatorias del estudiante (pandas).
   2. Búsqueda por similitud de contenido: sklearn.neighbors.NearestNeighbors
      sobre el vector RIASEC de 6 dimensiones (perfil del estudiante vs.
-     perfil de cada oferta académica).
+     perfil de cada oferta académica). Ese vector por oferta es una mezcla
+     85% campo amplio (`mapeo_riasec_campo_amplio.csv`, 10 categorías) + 15%
+     señal de texto (TF-IDF sobre NOMBRE_CARRERA vs. palabras clave por
+     dimensión, `PALABRAS_CLAVE_DIMENSION` más abajo) -- así carreras del
+     mismo campo amplio (que antes compartían el vector exacto, ej. 338
+     carreras distintas de "Administración de Empresas y Derecho" con
+     idéntico 99.5% de afinidad) quedan diferenciadas entre sí en vez de
+     empatadas.
   3. Distancia geográfica (fórmula de Haversine) entre el cantón del
      estudiante y el cantón de la sede, quien puede pesarse como
      "importante" o "indiferente".
@@ -33,6 +40,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler
 
@@ -42,6 +51,28 @@ CANTONES_CSV = BASE_DIR / "data" / "processed" / "cantones_coordenadas.csv"
 MAPEO_CSV = BASE_DIR / "data" / "processed" / "mapeo_riasec_campo_amplio.csv"
 
 DIMENSIONES = ["R", "I", "A", "S", "E", "C"]
+
+# Palabras clave por dimensión RIASEC (Holland), usadas como "documento ancla"
+# para el TF-IDF sobre NOMBRE_CARRERA -- señal secundaria (15% del vector
+# final, ver __init__) para diferenciar carreras dentro de un mismo campo
+# amplio. Curado a mano según la literatura general de Holland; igual que
+# mapeo_riasec_campo_amplio.csv, conviene que un orientador vocacional lo
+# revise antes de producción (ver README, "Datos que requieren revisión").
+PALABRAS_CLAVE_DIMENSION = {
+    "R": "mecanica mecanico electricidad electronica construccion agropecuaria "
+         "agricola veterinaria minas industrial automotriz mantenimiento tecnico "
+         "obras civil forestal pesca manufactura maquinaria",
+    "I": "investigacion ciencia cientifico analisis biologia quimica fisica "
+         "matematica estadistica laboratorio biotecnologia ambiental geologia",
+    "A": "arte artistico diseno musica teatro danza cine fotografia moda "
+         "creativo literatura escritura audiovisual publicidad",
+    "S": "social educacion docencia psicologia enfermeria salud terapia "
+         "comunitario cuidado orientacion ensenanza pedagogia",
+    "E": "gestion negocio empresa empresarial liderazgo marketing ventas "
+         "comercio emprendimiento finanzas administracion gerencia negociacion",
+    "C": "contabilidad auditoria control administrativo secretariado archivo "
+         "datos tributacion logistica procesos calidad",
+}
 
 
 def haversine_km(lat1, lon1, lat2, lon2) -> float:
@@ -80,10 +111,56 @@ class MotorRecomendacion:
             mapeo, left_on="CAMPO_AMPLIO_NORMALIZADO", right_on="campo_amplio_normalizado", how="left"
         )
 
-        pesos = self.oferta[DIMENSIONES].to_numpy(dtype=float)
-        sumas = pesos.sum(axis=1, keepdims=True)
-        sumas[sumas == 0] = 1.0
-        self.oferta[[f"vec_{d}" for d in DIMENSIONES]] = pesos / sumas
+        pesos_campo = self.oferta[DIMENSIONES].to_numpy(dtype=float)
+        sumas_campo = pesos_campo.sum(axis=1, keepdims=True)
+        sumas_campo[sumas_campo == 0] = 1.0
+        vec_campo = pesos_campo / sumas_campo
+
+        vec_texto = self._vector_texto_por_carrera()
+        sumas_texto = vec_texto.sum(axis=1, keepdims=True)
+        tiene_texto = (sumas_texto.ravel() > 0)
+        vec_texto_norm = np.zeros_like(vec_texto)
+        vec_texto_norm[tiene_texto] = vec_texto[tiene_texto] / sumas_texto[tiene_texto]
+
+        # Mezcla 85% campo amplio + 15% texto: el campo amplio sigue mandando,
+        # el texto solo desempata carreras que hoy comparten vector exacto.
+        # Si una carrera no matchea ninguna palabra clave (sumas_texto = 0),
+        # se queda con el vector de campo puro en vez de diluirlo con ceros.
+        peso_texto = 0.15
+        vec_final = vec_campo.copy()
+        vec_final[tiene_texto] = (
+            (1 - peso_texto) * vec_campo[tiene_texto] + peso_texto * vec_texto_norm[tiene_texto]
+        )
+        sumas_final = vec_final.sum(axis=1, keepdims=True)
+        sumas_final[sumas_final == 0] = 1.0
+        vec_final = vec_final / sumas_final
+
+        self.oferta[[f"vec_{d}" for d in DIMENSIONES]] = vec_final
+
+    def _vector_texto_por_carrera(self) -> np.ndarray:
+        """TF-IDF sobre NOMBRE_CARRERA vs. las palabras clave de cada dimensión
+        RIASEC (`PALABRAS_CLAVE_DIMENSION`). Devuelve un array (n_filas, 6) con
+        la similitud de coseno de cada oferta contra cada dimensión (0 si el
+        nombre no matchea ninguna palabra clave). Se vectoriza una sola vez
+        sobre los nombres de carrera únicos (no las 8000+ filas) y se mapea
+        de vuelta, por eficiencia."""
+        nombres_unicos = self.oferta["NOMBRE_CARRERA"].drop_duplicates().reset_index(drop=True)
+        anclas = [PALABRAS_CLAVE_DIMENSION[d] for d in DIMENSIONES]
+        corpus = list(nombres_unicos.str.lower()) + anclas
+
+        vectorizador = TfidfVectorizer(strip_accents="unicode")
+        matriz = vectorizador.fit_transform(corpus)
+        matriz_carreras = matriz[: len(nombres_unicos)]
+        matriz_anclas = matriz[len(nombres_unicos):]
+
+        similitud = cosine_similarity(matriz_carreras, matriz_anclas)
+        similitud[similitud < 0] = 0.0
+
+        tabla = pd.DataFrame(similitud, columns=DIMENSIONES)
+        tabla["NOMBRE_CARRERA"] = nombres_unicos.values
+
+        vec_texto_df = self.oferta[["NOMBRE_CARRERA"]].merge(tabla, on="NOMBRE_CARRERA", how="left")
+        return vec_texto_df[DIMENSIONES].to_numpy(dtype=float)
 
     @classmethod
     def desde_csv(cls) -> "MotorRecomendacion":

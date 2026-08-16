@@ -75,8 +75,13 @@ Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras 
    defecto excluye posgrado).
 2. **Búsqueda por similitud** (`sklearn.neighbors.NearestNeighbors`, métrica coseno):
    compara el vector RIASEC del estudiante (6 dimensiones) contra el vector de cada
-   oferta, derivado de `mapeo_riasec_campo_amplio.csv`. Se pide el ranking completo del
-   pool filtrado (no un top-k chico): el motor no recorta nada, así que necesita el
+   oferta. Ese vector es una mezcla **85% campo amplio** (`mapeo_riasec_campo_amplio.csv`,
+   10 categorías) **+ 15% señal de texto** (TF-IDF sobre `NOMBRE_CARRERA` contra
+   `PALABRAS_CLAVE_DIMENSION`, palabras clave por dimensión curadas en el propio motor) —
+   así carreras del mismo campo amplio ya no comparten el vector exacto (antes, p. ej.,
+   las 338 carreras de "Administración de Empresas y Derecho" empataban en 99.5% de
+   afinidad entre sí; ahora se diferencian según su nombre). Se pide el ranking completo
+   del pool filtrado (no un top-k chico): el motor no recorta nada, así que necesita el
    score de cada candidato, no solo de los primeros.
 3. **Cercanía geográfica** (fórmula de Haversine sobre `cantones_coordenadas.csv`):
    se combina con la similitud RIASEC según el peso que el estudiante le dé a "vivir
@@ -111,6 +116,11 @@ responde.
 - `data/processed/mapeo_riasec_campo_amplio.csv`: los pesos RIASEC por campo amplio
   están curados a mano según literatura general de orientación vocacional. Conviene que
   un orientador vocacional o psicólogo educativo los revise y ajuste antes de producción.
+- `PALABRAS_CLAVE_DIMENSION` en `src/04_motor_recomendacion.py`: listas de palabras clave
+  por dimensión RIASEC (curadas a mano, teoría de Holland) usadas para diferenciar
+  carreras dentro de un mismo campo amplio vía TF-IDF sobre `NOMBRE_CARRERA`. Mismo caso
+  que el mapeo de arriba — conviene revisión de un orientador vocacional, y ampliarlas
+  si aparecen carreras con nombres poco convencionales que no matchean ninguna palabra.
 - `data/processed/cantones_coordenadas.csv`: coordenadas de 92 cantones vienen de un
   gist comunitario (no oficial); 2 cantones (Puyo y General Plaza/Méndez) se corrigieron
   a mano tras detectar coordenadas erróneas en esa fuente, cruzando con otras referencias.
@@ -146,11 +156,11 @@ responda y guarda una captura en `docs/screenshot_resultados.png`.
 1. Añadir una fase de aprendizaje supervisado (`DecisionTreeClassifier` /
    `RandomForestClassifier`) que reentrene el re-ranking con retroalimentación real de
    usuarios ("me interesó" / "no me interesó").
-2. Enriquecer el vector RIASEC por carrera individual (hoy es por campo amplio) usando,
-   por ejemplo, similitud de texto sobre `NOMBRE_CARRERA` — hoy todas las carreras de un
-   mismo campo amplio comparten posición en el "Mapa de afinidad", una señal más fina
-   permitiría separarlas dentro del mismo anillo.
-3. Validar el mapeo RIASEC↔campo amplio con un orientador vocacional.
+2. Afinar `PALABRAS_CLAVE_DIMENSION` (motor, señal de texto por carrera) con más
+   vocabulario/sinónimos — hoy son listas cortas curadas a mano, cubren los casos más
+   comunes pero seguro se les escapan carreras con nombres poco convencionales.
+3. Validar `mapeo_riasec_campo_amplio.csv` **y** `PALABRAS_CLAVE_DIMENSION` con un
+   orientador vocacional (ambos son curados a mano, ver sección de abajo).
 4. Migrar las coordenadas de cantones a la fuente oficial del INEC/IGM.
 
 ## Fuente de los datos
