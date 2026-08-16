@@ -1,0 +1,161 @@
+:root {
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --ink: #1f2933;
+  --ink-soft: #52606d;
+  --accent: #1f4e79;
+  --accent-soft: #dce6f1;
+  --ok: #2f855a;
+  --border: #d9e2ec;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+header.app-header {
+  background: var(--accent);
+  color: white;
+  padding: 20px 24px;
+}
+header.app-header h1 { margin: 0; font-size: 1.4rem; }
+header.app-header p { margin: 4px 0 0; opacity: 0.85; font-size: 0.9rem; }
+
+main {
+  max-width: 860px;
+  margin: 24px auto 80px;
+  padding: 0 16px;
+}
+
+.pasos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.pasos .paso {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+}
+.pasos .paso.activo { background: var(--accent); color: white; border-color: var(--accent); }
+.pasos .paso.hecho { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+
+section.pantalla { display: none; }
+section.pantalla.visible { display: block; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.progreso-wrap {
+  background: var(--border);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  margin: 12px 0 20px;
+}
+.progreso-barra {
+  background: var(--accent);
+  height: 100%;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.item-test {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.item-test:last-child { border-bottom: none; }
+.item-test .texto { font-size: 0.98rem; }
+
+.switch-grupo { display: flex; gap: 6px; flex-shrink: 0; }
+.switch-grupo button {
+  border: 1px solid var(--border);
+  background: white;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.switch-grupo button.si.activo { background: var(--ok); border-color: var(--ok); color: white; }
+.switch-grupo button.no.activo { background: #e53e3e; border-color: #e53e3e; color: white; }
+
+.botones-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+button.primario {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+button.primario:disabled { opacity: 0.5; cursor: not-allowed; }
+button.secundario {
+  background: white;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+label.campo { display: block; margin-bottom: 16px; }
+label.campo span.etiqueta { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; }
+
+.slider-valor { font-size: 0.85rem; color: var(--ink-soft); margin-top: 4px; }
+
+.resultado-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: var(--card);
+}
+.resultado-item h3 { margin: 0 0 4px; font-size: 1.05rem; color: var(--accent); }
+.resultado-item .ies { color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 8px; }
+.resultado-item .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.78rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.perfil-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.perfil-resumen .barra-dim { flex: 1 1 140px; }
+.perfil-resumen .barra-dim .nombre { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 2px; }
+.perfil-resumen .barra-fondo { background: var(--border); border-radius: 999px; height: 8px; overflow: hidden; }
+.perfil-resumen .barra-fondo > div { background: var(--accent); height: 100%; }
+
+.aviso { color: var(--ink-soft); font-size: 0.85rem; }
+.error { color: #c53030; font-size: 0.9rem; margin-top: 8px; }

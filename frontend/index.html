@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Recomendador de Carreras Ecuador</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Recomendador de Carreras — Ecuador</h1>
+  <p>Test vocacional + búsqueda en la oferta académica oficial de las IES del Ecuador (SENESCYT)</p>
+</header>
+
+<main>
+  <div class="pasos">
+    <div class="paso" data-paso="1">1. Test vocacional</div>
+    <div class="paso" data-paso="2">2. Tus preferencias</div>
+    <div class="paso" data-paso="3">3. Resultados</div>
+  </div>
+
+  <!-- PASO 1: TEST -->
+  <section class="pantalla" id="pantalla-test">
+    <div class="card">
+      <h2>¿Qué actividades te interesan?</h2>
+      <p class="aviso">
+        Marca "Me interesa" o "No me interesa" para cada actividad. No hay respuestas
+        correctas o incorrectas — responde con lo primero que sientas.
+        Basado en el <strong>O*NET Interest Profiler</strong> (modelo RIASEC de Holland).
+      </p>
+      <div class="progreso-wrap"><div class="progreso-barra" id="barra-test"></div></div>
+      <div id="lista-items"></div>
+    </div>
+    <div class="botones-nav">
+      <span></span>
+      <button class="primario" id="btn-ir-preferencias" disabled>Continuar</button>
+    </div>
+  </section>
+
+  <!-- PASO 2: PREFERENCIAS -->
+  <section class="pantalla" id="pantalla-preferencias">
+    <div class="card">
+      <h2>Tu perfil vocacional</h2>
+      <div class="perfil-resumen" id="resumen-perfil"></div>
+    </div>
+
+    <div class="card">
+      <h2>¿Qué priorizas al elegir carrera?</h2>
+
+      <label class="campo">
+        <span class="etiqueta">Modalidad</span>
+        <select id="pref-modalidad"><option value="">Indiferente</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Tipo de financiamiento</span>
+        <select id="pref-financiamiento"><option value="">Indiferente</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Tipo de institución</span>
+        <select id="pref-tipo-ies"><option value="">Indiferente</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Nivel de formación</span>
+        <select id="pref-nivel"><option value="">Cualquiera (técnico, tecnológico o tercer nivel)</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Provincia donde vives</span>
+        <select id="pref-provincia"><option value="">Prefiero no decir / indiferente</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Cantón donde vives</span>
+        <select id="pref-canton"><option value="">—</option></select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">¿Qué tan importante es estudiar cerca de casa?</span>
+        <input type="range" id="pref-cercania" min="0" max="100" value="0" />
+        <div class="slider-valor" id="valor-cercania">Indiferente (0%)</div>
+      </label>
+    </div>
+
+    <div class="botones-nav">
+      <button class="secundario" id="btn-volver-test">Volver</button>
+      <button class="primario" id="btn-ver-resultados">Ver recomendaciones</button>
+    </div>
+  </section>
+
+  <!-- PASO 3: RESULTADOS -->
+  <section class="pantalla" id="pantalla-resultados">
+    <div class="card">
+      <h2>Carreras recomendadas para ti</h2>
+      <p class="aviso">Ordenadas según tu perfil vocacional y tus preferencias.</p>
+    </div>
+    <div id="lista-resultados"></div>
+    <div class="botones-nav">
+      <button class="secundario" id="btn-volver-preferencias">Ajustar preferencias</button>
+      <button class="primario" id="btn-reiniciar">Volver a empezar</button>
+    </div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

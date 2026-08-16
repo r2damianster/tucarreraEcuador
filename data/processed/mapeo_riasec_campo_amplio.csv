@@ -1,0 +1,11 @@
+campo_amplio_normalizado,R,I,A,S,E,C
+Educación,0.0,0.1,0.2,1.0,0.1,0.1
+Artes y Humanidades,0.0,0.1,1.0,0.3,0.1,0.0
+"Ciencias Sociales, Periodismo e Información",0.0,0.2,0.3,0.4,0.6,0.1
+Administración de Empresas y Derecho,0.0,0.1,0.0,0.2,0.7,0.5
+"Ciencias Naturales, Matemáticas y Estadística",0.2,1.0,0.0,0.0,0.0,0.2
+Tecnologías de la Información y la Comunicación (TIC),0.3,0.4,0.1,0.0,0.2,0.6
+"Ingeniería, Industria y Construcción",0.8,0.3,0.1,0.0,0.1,0.1
+"Agricultura, Silvicultura, Pesca y Veterinaria",0.9,0.3,0.0,0.1,0.0,0.0
+Salud y Bienestar,0.1,0.6,0.0,0.6,0.1,0.1
+Servicios,0.5,0.1,0.1,0.5,0.3,0.3
