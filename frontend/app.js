@@ -166,7 +166,7 @@ async function verResultados() {
 
   try {
     const data = await apiPost("/api/recomendar", { perfil_riasec: estado.perfilRiasec, preferencias });
-    renderResultados(data.resultados.filter((r) => r.tier !== "alejada"));
+    renderResultados(data.resultados.filter((r) => resolverTier(r) !== "alejada"));
     renderDiagrama(data.resultados);
   } catch (e) {
     cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
@@ -213,6 +213,15 @@ const NOMBRE_TIER = {
   intermedio: "Afinidad intermedia",
   alejada: "Más alejada",
 };
+const TIERS_VALIDOS = new Set(["nucleo", "intermedio", "alejada"]);
+// Si la API no manda un tier reconocido (p. ej. backend viejo sin esta
+// funcionalidad todavía desplegado), cae a "alejada" en vez de romper el
+// render o mostrar "undefined" -- pero de forma consistente en todos lados
+// (bucket del punto, conteo de la leyenda y etiqueta del detalle usan esta
+// misma función, nunca el r.tier crudo).
+function resolverTier(r) {
+  return TIERS_VALIDOS.has(r.tier) ? r.tier : "alejada";
+}
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~137.5°, distribución tipo girasol
 
 function escaparHtml(texto) {
@@ -247,7 +256,7 @@ function renderDiagrama(resultados) {
   }
 
   const porTier = { nucleo: [], intermedio: [], alejada: [] };
-  resultados.forEach((r) => (porTier[r.tier] || porTier.alejada).push(r));
+  resultados.forEach((r) => porTier[resolverTier(r)].push(r));
   Object.values(porTier).forEach((lista) => lista.sort((a, b) => b.score_final - a.score_final));
 
   const puntos = ["nucleo", "intermedio", "alejada"].flatMap((tier) =>
@@ -264,7 +273,7 @@ function renderDiagrama(resultados) {
       const cy = y.toFixed(1);
       const titulo = `${escaparHtml(resultado.NOMBRE_CARRERA)} — ${Math.round(resultado.similitud_riasec * 100)}% afinidad`;
       return `
-        <circle class="dv-punto ${resultado.tier}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
+        <circle class="dv-punto ${resolverTier(resultado)}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
         <circle class="dv-punto-hit" cx="${cx}" cy="${cy}" r="12" data-idx="${i}" />`;
     })
     .join("");
@@ -292,14 +301,14 @@ function mostrarDetalleDiagrama(r) {
     <div class="ies">${titleCase(r.NOMBRE_IES)} · ${titleCase(r.CANTÓN)}, ${titleCase(r.PROVINCIA)}</div>
     <div class="etiquetas">
       <span class="tag">${titleCase(r.CAMPO_AMPLIO_NORMALIZADO)}</span>
-      <span class="tag">${NOMBRE_TIER[r.tier]}</span>
+      <span class="tag">${NOMBRE_TIER[resolverTier(r)]}</span>
       <span class="tag">Afinidad ${Math.round(r.similitud_riasec * 100)}%</span>
     </div>`;
 }
 
 function renderLeyendaDiagrama(resultados) {
   const cont = document.getElementById("dv-leyenda");
-  const nAlejada = resultados.filter((r) => r.tier === "alejada").length;
+  const nAlejada = resultados.filter((r) => resolverTier(r) === "alejada").length;
   cont.innerHTML = `
     <div class="item"><span class="swatch" style="background:var(--tier-nucleo)"></span>Núcleo afín</div>
     <div class="item"><span class="swatch" style="background:var(--tier-intermedio)"></span>Afinidad intermedia</div>
