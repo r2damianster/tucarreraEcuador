@@ -61,10 +61,10 @@ dominio, define `window.API_BASE` antes de cargar `app.js` (por defecto apunta a
 - `GET /api/test-riasec` — los 60 ítems del test (sin revelar su dimensión) + info de las 6 dimensiones.
 - `POST /api/calcular-perfil` — `{"respuestas": {"R1": true, "I1": false, ...}}` -> puntaje 0-1 por dimensión.
 - `GET /api/opciones` — valores disponibles para los filtros (modalidad, financiamiento, provincia/cantón, etc.).
-- `POST /api/recomendar` — `{"perfil_riasec": {...}, "preferencias": {...}}` -> lista de
-  carreras recomendadas, cada una con `tier` (`nucleo`/`intermedio`/`alejada`) para el
-  diagrama de afinidad. `preferencias.top_n` controla el tamaño de núcleo+intermedio; el
-  tope del anillo "alejada" es fijo (`cap_alejada`, ver `Preferencias` en el motor).
+- `POST /api/recomendar` — `{"perfil_riasec": {...}, "preferencias": {...}}` -> **todas**
+  las carreras que pasan el filtro duro (sin tope, sin diversificar), ordenadas por
+  `score_final` desc. El frontend decide cuánto mostrar y cómo agrupar por afinidad
+  (`tier`) en el cliente — ver más abajo.
 
 Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras la API corre.
 
@@ -76,20 +76,22 @@ Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras 
 2. **Búsqueda por similitud** (`sklearn.neighbors.NearestNeighbors`, métrica coseno):
    compara el vector RIASEC del estudiante (6 dimensiones) contra el vector de cada
    oferta, derivado de `mapeo_riasec_campo_amplio.csv`. Se pide el ranking completo del
-   pool filtrado (no un top-k chico) para que la diversificación posterior pueda ver
-   todos los campos amplios presentes, no solo el más cercano.
+   pool filtrado (no un top-k chico): el motor no recorta nada, así que necesita el
+   score de cada candidato, no solo de los primeros.
 3. **Cercanía geográfica** (fórmula de Haversine sobre `cantones_coordenadas.csv`):
    se combina con la similitud RIASEC según el peso que el estudiante le dé a "vivir
    cerca" (0 = indiferente, 1 = solo importa la cercanía).
-4. **Diversificación + tiers**: reparte los resultados por turnos entre los campos
-   amplios presentes en el pool (evita devolver 10 variantes de la misma oferta;
-   ver nota de diseño en el propio código sobre por qué no se usa KMeans acá) y
-   etiqueta cada fila con `tier` (`nucleo` / `intermedio` / `alejada`) según en qué
-   posición quedó su campo amplio en el ranking: los campos mejor puntuados forman
-   el núcleo, los siguientes la afinidad intermedia, y el resto cae en "alejada"
-   con un tope propio (`cap_alejada`, 20 por defecto) sin mínimo de similitud. El
-   frontend usa `tier` para el "Mapa de afinidad" (diagrama de círculos
-   concéntricos en la pantalla de resultados).
+4. **Sin diversificación ni tope**: se deduplican filas repetidas de la misma pareja
+   (carrera, IES) y se devuelve **todo** el pool ordenado por `score_final` desc — nada
+   de round-robin por campo amplio ni límite de filas. La razón: el vector RIASEC de
+   cada oferta se deriva de su `CAMPO_AMPLIO_NORMALIZADO` (10 categorías), así que
+   diversificar por campo o cortar a un top-N arbitrario terminaba escondiendo carreras
+   con afinidad real alta (ej. 85%) solo porque su campo quedaba 7mo en el ranking.
+   El frontend (`app.js`) arma el "Mapa de afinidad" (diagrama de círculos concéntricos)
+   calculando el `tier` directo sobre `similitud_riasec` (`nucleo` ≥80%, `intermedio`
+   ≥50%, `alejada` el resto), y deja que un slider de "afinidad mínima" (por
+   defecto 80%, ajustable a 0%) decida cuánto de ese pool completo se muestra — tanto en
+   la lista de tarjetas como en el diagrama.
 5. **Exploración por clústeres** (`sklearn.cluster.KMeans`, método aparte
    `explorar_clusters_vocacionales`): agrupa todas las carreras únicas en clústeres
    vocacionales, pensado para una vista de "explora por familia de interés" en el

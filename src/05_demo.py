@@ -59,10 +59,10 @@ def main():
     prefs_1 = motor_mod.Preferencias(
         modalidad="PRESENCIAL",
         peso_cercania=0.0,
-        top_n=10,
     )
     resultado_1 = motor.buscar(perfil_1, prefs_1)
-    mostrar("Top 10 recomendaciones (perfil Investigativo/Realista)", resultado_1)
+    print(f"({len(resultado_1)} carreras en total, sin cortar -- se muestran las 10 más afines)")
+    mostrar("Top 10 recomendaciones (perfil Investigativo/Realista)", resultado_1.head(10))
 
     print("\n" + "=" * 70)
     print("PRUEBA 2 - Perfil Social/Artístico, estudiante en Loja, la cercanía")
@@ -72,10 +72,10 @@ def main():
     prefs_2 = motor_mod.Preferencias(
         canton_estudiante="LOJA",
         peso_cercania=0.6,
-        top_n=10,
     )
     resultado_2 = motor.buscar(perfil_2, prefs_2)
-    mostrar("Top 10 recomendaciones (perfil Social/Artístico, prioriza cercanía a Loja)", resultado_2)
+    print(f"({len(resultado_2)} carreras en total, sin cortar -- se muestran las 10 más afines)")
+    mostrar("Top 10 recomendaciones (perfil Social/Artístico, prioriza cercanía a Loja)", resultado_2.head(10))
 
     print("\n" + "=" * 70)
     print("PRUEBA 3 - Exploración por clústeres vocacionales (KMeans, uso de")

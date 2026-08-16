@@ -11,6 +11,7 @@ const estado = {
   perfilRiasec: null,
   opciones: null,
   cantonesPorProvincia: {},
+  resultadosCompletos: [], // todo lo que devolvió la API para el perfil/preferencias actuales, sin filtrar
 };
 
 // ---------- Utilidades ----------
@@ -157,7 +158,6 @@ async function verResultados() {
     provincia_estudiante: valorOVacio("pref-provincia"),
     canton_estudiante: valorOVacio("pref-canton"),
     peso_cercania: Number(document.getElementById("pref-cercania").value) / 100,
-    top_n: 12,
   };
 
   const cont = document.getElementById("lista-resultados");
@@ -166,14 +166,12 @@ async function verResultados() {
 
   try {
     const data = await apiPost("/api/recomendar", { perfil_riasec: estado.perfilRiasec, preferencias });
-    const resultados = data.resultados;
-    // Si el 100% cayó en "alejada" es porque la API no manda `tier` todavía
-    // (backend desactualizado) -- resolverTier() lo usa como fallback seguro,
-    // pero en ese caso no filtramos la lista: mostramos todo, como antes de
-    // que existiera el diagrama de afinidad, en vez de dejarla vacía.
-    const sinTiersReales = resultados.length > 0 && resultados.every((r) => resolverTier(r) === "alejada");
-    renderResultados(sinTiersReales ? resultados : resultados.filter((r) => resolverTier(r) !== "alejada"));
-    renderDiagrama(resultados);
+    // La API devuelve TODO lo que pasa el filtro duro, ordenado por score_final
+    // -- ninguna diversificación ni tope acá. El filtro de "afinidad mínima"
+    // (slider) decide en el cliente cuánto de esto se muestra, sin volver a
+    // pedirle nada al servidor.
+    estado.resultadosCompletos = data.resultados;
+    aplicarFiltroAfinidad();
   } catch (e) {
     cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
   }
@@ -184,13 +182,27 @@ function valorOVacio(id) {
   return v === "" ? null : v;
 }
 
-function renderResultados(resultados) {
+function aplicarFiltroAfinidad() {
+  const umbral = Number(document.getElementById("filtro-afinidad").value) / 100;
+  const filtrados = estado.resultadosCompletos.filter((r) => r.similitud_riasec >= umbral);
+  renderResultados(filtrados, umbral);
+  renderDiagrama(filtrados);
+}
+
+function renderResultados(resultados, umbralActual) {
   const cont = document.getElementById("lista-resultados");
   if (!resultados.length) {
-    cont.innerHTML = `<p class="aviso">No se encontraron carreras con esos filtros. Prueba relajando alguna preferencia.</p>`;
+    const hayResultadosSinFiltrar = estado.resultadosCompletos.length > 0;
+    cont.innerHTML = hayResultadosSinFiltrar
+      ? `<p class="aviso">Ninguna carrera llega a ${Math.round(umbralActual * 100)}% de afinidad. Bajá el filtro "Afinidad mínima a mostrar" de arriba para ver más opciones.</p>`
+      : `<p class="aviso">No se encontraron carreras con esos filtros. Prueba relajando alguna preferencia.</p>`;
     return;
   }
+  const contador = document.createElement("p");
+  contador.className = "aviso";
+  contador.textContent = `Mostrando ${resultados.length} de ${estado.resultadosCompletos.length} carreras.`;
   cont.innerHTML = "";
+  cont.appendChild(contador);
   resultados.forEach((r) => {
     const div = document.createElement("div");
     div.className = "resultado-item";
@@ -219,14 +231,16 @@ const NOMBRE_TIER = {
   intermedio: "Afinidad intermedia",
   alejada: "Más alejada",
 };
-const TIERS_VALIDOS = new Set(["nucleo", "intermedio", "alejada"]);
-// Si la API no manda un tier reconocido (p. ej. backend viejo sin esta
-// funcionalidad todavía desplegado), cae a "alejada" en vez de romper el
-// render o mostrar "undefined" -- pero de forma consistente en todos lados
-// (bucket del punto, conteo de la leyenda y etiqueta del detalle usan esta
-// misma función, nunca el r.tier crudo).
-function resolverTier(r) {
-  return TIERS_VALIDOS.has(r.tier) ? r.tier : "alejada";
+// Tier = umbral sobre el score real de afinidad (no ranking de campo amplio
+// -- eso hacía que una carrera con 85% de afinidad cayera "alejada" solo por
+// tener el campo amplio en 7mo lugar). Con esto, quien tiene 80%+ siempre
+// aparece en el núcleo, sin importar cuántos otros campos midan más.
+const UMBRAL_NUCLEO = 0.8;
+const UMBRAL_INTERMEDIO = 0.5;
+function calcularTier(similitud) {
+  if (similitud >= UMBRAL_NUCLEO) return "nucleo";
+  if (similitud >= UMBRAL_INTERMEDIO) return "intermedio";
+  return "alejada";
 }
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~137.5°, distribución tipo girasol
 
@@ -262,11 +276,22 @@ function renderDiagrama(resultados) {
   }
 
   const porTier = { nucleo: [], intermedio: [], alejada: [] };
-  resultados.forEach((r) => porTier[resolverTier(r)].push(r));
+  resultados.forEach((r) => porTier[calcularTier(r.similitud_riasec)].push(r));
   Object.values(porTier).forEach((lista) => lista.sort((a, b) => b.score_final - a.score_final));
 
+  // El diagrama es un vistazo visual, no un listado -- con el slider mostrando
+  // todo, un anillo puede tener cientos de carreras y dibujarlas todas sería
+  // un borrón ilegible. Se muestra una muestra de las mejores de cada anillo;
+  // la lista de abajo (sin este tope) sigue teniendo el detalle completo.
+  const MAX_PUNTOS_POR_ANILLO = 24;
+  const porTierRecortado = {
+    nucleo: porTier.nucleo.slice(0, MAX_PUNTOS_POR_ANILLO),
+    intermedio: porTier.intermedio.slice(0, MAX_PUNTOS_POR_ANILLO),
+    alejada: porTier.alejada.slice(0, MAX_PUNTOS_POR_ANILLO),
+  };
+
   const puntos = ["nucleo", "intermedio", "alejada"].flatMap((tier) =>
-    ubicarPuntosEnBanda(porTier[tier], BANDAS_TIER[tier])
+    ubicarPuntosEnBanda(porTierRecortado[tier], BANDAS_TIER[tier])
   );
 
   const anillos = Object.values(BANDAS_TIER)
@@ -279,7 +304,7 @@ function renderDiagrama(resultados) {
       const cy = y.toFixed(1);
       const titulo = `${escaparHtml(resultado.NOMBRE_CARRERA)} — ${Math.round(resultado.similitud_riasec * 100)}% afinidad`;
       return `
-        <circle class="dv-punto ${resolverTier(resultado)}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
+        <circle class="dv-punto ${calcularTier(resultado.similitud_riasec)}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
         <circle class="dv-punto-hit" cx="${cx}" cy="${cy}" r="12" data-idx="${i}" />`;
     })
     .join("");
@@ -297,7 +322,7 @@ function renderDiagrama(resultados) {
     el.addEventListener("click", () => mostrarDetalleDiagrama(resultado));
   });
 
-  renderLeyendaDiagrama(resultados);
+  renderLeyendaDiagrama(porTier, MAX_PUNTOS_POR_ANILLO);
 }
 
 function mostrarDetalleDiagrama(r) {
@@ -307,19 +332,27 @@ function mostrarDetalleDiagrama(r) {
     <div class="ies">${titleCase(r.NOMBRE_IES)} · ${titleCase(r.CANTÓN)}, ${titleCase(r.PROVINCIA)}</div>
     <div class="etiquetas">
       <span class="tag">${titleCase(r.CAMPO_AMPLIO_NORMALIZADO)}</span>
-      <span class="tag">${NOMBRE_TIER[resolverTier(r)]}</span>
+      <span class="tag">${NOMBRE_TIER[calcularTier(r.similitud_riasec)]}</span>
       <span class="tag">Afinidad ${Math.round(r.similitud_riasec * 100)}%</span>
     </div>`;
 }
 
-function renderLeyendaDiagrama(resultados) {
+function renderLeyendaDiagrama(porTier, maxPorAnillo) {
   const cont = document.getElementById("dv-leyenda");
-  const nAlejada = resultados.filter((r) => resolverTier(r) === "alejada").length;
+  const etiquetaConteo = (tier) => {
+    const total = porTier[tier].length;
+    return total > maxPorAnillo ? `${total}, mostrando ${maxPorAnillo}` : `${total}`;
+  };
   cont.innerHTML = `
-    <div class="item"><span class="swatch" style="background:var(--tier-nucleo)"></span>Núcleo afín</div>
-    <div class="item"><span class="swatch" style="background:var(--tier-intermedio)"></span>Afinidad intermedia</div>
-    <div class="item"><span class="swatch" style="background:var(--tier-alejada)"></span>Más alejadas (máx. ${nAlejada})</div>`;
+    <div class="item"><span class="swatch" style="background:var(--tier-nucleo)"></span>Núcleo afín (${etiquetaConteo("nucleo")})</div>
+    <div class="item"><span class="swatch" style="background:var(--tier-intermedio)"></span>Afinidad intermedia (${etiquetaConteo("intermedio")})</div>
+    <div class="item"><span class="swatch" style="background:var(--tier-alejada)"></span>Más alejadas (${etiquetaConteo("alejada")})</div>`;
 }
+
+document.getElementById("filtro-afinidad").addEventListener("input", (ev) => {
+  document.getElementById("valor-filtro-afinidad").textContent = `Desde ${ev.target.value}%`;
+  aplicarFiltroAfinidad();
+});
 
 // ---------- Navegación ----------
 document.getElementById("btn-ir-preferencias").addEventListener("click", irAPreferencias);

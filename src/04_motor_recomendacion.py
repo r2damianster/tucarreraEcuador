@@ -9,11 +9,12 @@ Combina:
   3. Distancia geográfica (fórmula de Haversine) entre el cantón del
      estudiante y el cantón de la sede, quien puede pesarse como
      "importante" o "indiferente".
-  4. Diversificación de resultados: sklearn.cluster.KMeans agrupa el
-     conjunto de candidatos en clústeres vocacionales y el motor entrega
-     el mejor resultado de cada clúster por turnos, para que la lista
-     final muestre opciones "diversas y amplias" (no 10 variantes de la
-     misma carrera), tal como pide el proyecto.
+  4. Sin diversificación ni tope de resultados: `buscar()` devuelve TODAS las
+     carreras que pasan el filtro duro, ordenadas por score y sin duplicados
+     de (carrera, IES). El frontend decide cuántas mostrar con un filtro de
+     afinidad mínima dinámico (slider) -- ver `frontend/app.js`. El campo
+     `tier` (núcleo/intermedio/alejada, usado en el diagrama de afinidad) se
+     calcula ahí mismo por umbral de `similitud_riasec`, no acá.
 
 Uso rápido (ver también src/05_demo.py):
 
@@ -65,10 +66,6 @@ class Preferencias:
     canton_estudiante: Optional[str] = None
     peso_cercania: float = 0.0                # 0 = indiferente ... 1 = solo importa la cercanía
     incluir_posgrado: bool = False
-    top_n: int = 10
-    cap_campos_nucleo: int = 3                # nº de campos amplios que forman el anillo "núcleo"
-    cap_campos_intermedio: int = 3            # nº de campos amplios siguientes ("afinidad intermedia")
-    cap_alejada: int = 20                     # tope de carreras en el anillo "alejada" (sin mínimo de similitud)
 
 
 class MotorRecomendacion:
@@ -168,87 +165,23 @@ class MotorRecomendacion:
         )
         pool = pool.sort_values("score_final", ascending=False)
 
-        resultado = self._diversificar(pool, prefs)
+        resultado = self._deduplicar(pool)
         columnas = [
             "NOMBRE_CARRERA", "NOMBRE_IES", "CAMPO_AMPLIO_NORMALIZADO", "PROVINCIA", "CANTÓN",
             "MODALIDAD", "TIPO_FINANCIAMIENTO", "NIVEL_FORMACIÓN", "similitud_riasec",
-            "score_cercania", "score_final", "tier",
+            "score_cercania", "score_final",
         ]
         return resultado[columnas].reset_index(drop=True)
 
     @staticmethod
-    def _diversificar(pool: pd.DataFrame, prefs: "Preferencias") -> pd.DataFrame:
-        """Arma el resultado por turnos (round robin) entre los campos amplios
-        presentes en el pool, ordenados por su mejor score_final, y evita
-        repetir la misma pareja (carrera, IES) -- así el resultado muestra
-        opciones diversas y amplias en vez de N variantes (por modalidad,
-        por ejemplo) de la misma oferta.
-
-        Además etiqueta cada fila con un `tier` ('nucleo' | 'intermedio' |
-        'alejada') según en qué posición quedó su campo amplio en el ranking
-        de campos -- pensado para el diagrama de círculos concéntricos de
-        resultados: núcleo = los campos mejor puntuados, intermedio = los
-        siguientes, alejada = el resto (con tope propio `cap_alejada`, sin
-        mínimo de similitud, ya que el vector RIASEC por campo amplio no da
-        para un umbral fino).
-
-        Nota de diseño: como el vector RIASEC de cada oferta hoy se deriva
-        del CAMPO_AMPLIO_NORMALIZADO (10 categorías), todas las carreras de
-        un mismo campo comparten el mismo vector -- por eso la diversidad
-        real y accionable en esta etapa es "por campo amplio", no por
-        clúster geométrico. Cuando se agregue una señal más fina por
-        carrera (ver `explorar_clusters_vocacionales`, que sí usa KMeans
-        sobre un espacio continuo sintético para exploración), este método
-        puede evolucionar a un KMeans real sobre vectores por carrera."""
-        pool = pool.sort_values("score_final", ascending=False)
-        orden_campos = (
-            pool.groupby("CAMPO_AMPLIO_NORMALIZADO")["score_final"].max()
-            .sort_values(ascending=False).index.tolist()
-        )
-        n_nucleo = min(prefs.cap_campos_nucleo, len(orden_campos))
-        n_intermedio = min(prefs.cap_campos_intermedio, len(orden_campos) - n_nucleo)
-        tier_por_campo = {}
-        for i, campo in enumerate(orden_campos):
-            if i < n_nucleo:
-                tier_por_campo[campo] = "nucleo"
-            elif i < n_nucleo + n_intermedio:
-                tier_por_campo[campo] = "intermedio"
-            else:
-                tier_por_campo[campo] = "alejada"
-
-        colas = {
-            campo: list(grp.index) for campo, grp in pool.groupby("CAMPO_AMPLIO_NORMALIZADO")
-        }
-        campos_centrales = [c for c in orden_campos if tier_por_campo[c] != "alejada"]
-        campos_alejados = [c for c in orden_campos if tier_por_campo[c] == "alejada"]
-
-        def _round_robin(campos: list, tope: int, elegidos: list, vistos: set) -> None:
-            avance = True
-            while len(elegidos) < tope and avance:
-                avance = False
-                for campo in campos:
-                    if len(elegidos) >= tope:
-                        break
-                    cola = colas.get(campo, [])
-                    while cola:
-                        idx = cola.pop(0)
-                        clave = (pool.loc[idx, "NOMBRE_CARRERA"], pool.loc[idx, "NOMBRE_IES"])
-                        if clave in vistos:
-                            continue
-                        vistos.add(clave)
-                        elegidos.append(idx)
-                        avance = True
-                        break
-
-        elegidos: list = []
-        vistos: set = set()
-        _round_robin(campos_centrales, prefs.top_n, elegidos, vistos)
-        n_centrales = len(elegidos)
-        _round_robin(campos_alejados, n_centrales + prefs.cap_alejada, elegidos, vistos)
-
-        resultado = pool.loc[elegidos].copy()
-        resultado["tier"] = resultado["CAMPO_AMPLIO_NORMALIZADO"].map(tier_por_campo)
-        return resultado
+    def _deduplicar(pool: pd.DataFrame) -> pd.DataFrame:
+        """Quita filas repetidas de la misma pareja (carrera, IES) -- ocurre
+        en la fuente SENESCYT (variantes de modalidad/jornada que igual pasan
+        el filtro duro, o duplicados de carga) -- quedándose con la de mejor
+        score_final. No recorta ni diversifica por campo amplio: el pool ya
+        viene ordenado por score_final descendente, así que a quien consuma
+        el resultado (frontend) le queda decidir cuántas filas mostrar."""
+        return pool.drop_duplicates(subset=["NOMBRE_CARRERA", "NOMBRE_IES"], keep="first")
 
     def explorar_clusters_vocacionales(self, n_clusters: int = 10) -> pd.DataFrame:
         """Uso exploratorio (no forma parte de una búsqueda puntual): agrupa

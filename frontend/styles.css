@@ -137,6 +137,7 @@ button.secundario {
 
 label.campo { display: block; margin-bottom: 16px; }
 label.campo span.etiqueta { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+label.campo-slider { margin: 14px 0 0; }
 select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; }
 
 .slider-valor { font-size: 0.85rem; color: var(--ink-soft); margin-top: 4px; }

@@ -81,7 +81,6 @@ class PreferenciasIn(BaseModel):
     canton_estudiante: Optional[str] = None
     peso_cercania: float = Field(0.0, ge=0.0, le=1.0)
     incluir_posgrado: bool = False
-    top_n: int = Field(10, ge=1, le=50)
 
 
 class SolicitudRecomendacion(BaseModel):
