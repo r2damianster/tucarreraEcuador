@@ -166,8 +166,14 @@ async function verResultados() {
 
   try {
     const data = await apiPost("/api/recomendar", { perfil_riasec: estado.perfilRiasec, preferencias });
-    renderResultados(data.resultados.filter((r) => resolverTier(r) !== "alejada"));
-    renderDiagrama(data.resultados);
+    const resultados = data.resultados;
+    // Si el 100% cayó en "alejada" es porque la API no manda `tier` todavía
+    // (backend desactualizado) -- resolverTier() lo usa como fallback seguro,
+    // pero en ese caso no filtramos la lista: mostramos todo, como antes de
+    // que existiera el diagrama de afinidad, en vez de dejarla vacía.
+    const sinTiersReales = resultados.length > 0 && resultados.every((r) => resolverTier(r) === "alejada");
+    renderResultados(sinTiersReales ? resultados : resultados.filter((r) => resolverTier(r) !== "alejada"));
+    renderDiagrama(resultados);
   } catch (e) {
     cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
   }
