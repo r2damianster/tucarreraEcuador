@@ -35,6 +35,20 @@ header.app-header {
 }
 header.app-header h1 { margin: 0; font-size: 1.4rem; }
 header.app-header p { margin: 4px 0 0; opacity: 0.85; font-size: 0.9rem; }
+header.app-header p.creditos { margin-top: 8px; font-size: 0.8rem; opacity: 0.75; }
+header.app-header p.creditos a { color: white; text-decoration: underline; }
+
+footer.app-footer {
+  max-width: 860px;
+  margin: 0 auto 40px;
+  padding: 16px;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+footer.app-footer p { margin: 0 0 8px; }
+footer.app-footer p:last-child { margin-bottom: 0; }
+footer.app-footer strong { color: var(--ink); }
 
 main {
   max-width: 860px;
@@ -212,6 +226,30 @@ select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; borde
   font-size: 0.78rem;
   padding: 3px 9px;
   border-radius: 999px;
+}
+
+.disclaimer {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.disclaimer li { margin-bottom: 4px; }
+
+#comentario-ia { margin-top: 12px; }
+#comentario-ia .comentario-texto {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+#comentario-ia .comentario-nota {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
 }
 
 .perfil-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }

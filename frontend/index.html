@@ -11,6 +11,10 @@
 <header class="app-header">
   <h1>Recomendador de Carreras — Ecuador</h1>
   <p>Test vocacional + búsqueda en la oferta académica oficial de las IES del Ecuador (SENESCYT)</p>
+  <p class="creditos">
+    Arturo Rodríguez, PhD · <a href="https://orcid.org/0000-0002-7017-9443" target="_blank" rel="noopener">ORCID</a>
+    — docente, investigador y videocoder
+  </p>
 </header>
 
 <main>
@@ -111,6 +115,25 @@
           <div class="filtros-activos" id="filtros-activos"></div>
         </div>
 
+        <div class="card">
+          <h3>Sobre estas recomendaciones</h3>
+          <ul class="disclaimer">
+            <li>La afinidad se calcula comparando tu perfil RIASEC (test) y tus preferencias con la
+              oferta académica oficial — no mide tu probabilidad de éxito ni reemplaza una
+              evaluación vocacional profesional.</li>
+            <li>La decisión final es tuya: verificá cada carrera y cada institución directamente
+              con la IES o en SENESCYT antes de decidir.</li>
+            <li>Oferta académica actualizada al 5 de febrero de 2025.</li>
+          </ul>
+
+          <hr class="separador-filtros" />
+
+          <button type="button" class="secundario" id="btn-comentario-ia">
+            Generar comentario sobre tu perfil (IA)
+          </button>
+          <div id="comentario-ia"></div>
+        </div>
+
         <div class="card" id="card-diagrama">
           <h3>Mapa de afinidad</h3>
           <p class="aviso">
@@ -135,6 +158,18 @@
     </div>
   </section>
 </main>
+
+<footer class="app-footer">
+  <p><strong>Metodología:</strong> test vocacional basado en el <em>O*NET Interest Profiler Short Form</em>
+    (modelo RIASEC de Holland). Motor de recomendación: scikit-learn
+    (<code>NearestNeighbors</code>, similitud coseno, TF-IDF por carrera) + fórmula de Haversine
+    para cercanía geográfica.</p>
+  <p><strong>Fuente de datos:</strong> Secretaría de Educación Superior, Ciencia, Tecnología e
+    Innovación (SENESCYT). (2025, 5 de febrero). <em>Base de datos de oferta académica de las
+    IES</em> [Conjunto de datos]. Portal Único de Datos Abiertos del Ecuador.</p>
+  <p><strong>Instrumento:</strong> National Center for O*NET Development. (s. f.). <em>O*NET
+    Interest Profiler Short Form</em>. U.S. Department of Labor.</p>
+</footer>
 
 <script src="config.js"></script>
 <script src="app.js"></script>

@@ -183,6 +183,7 @@ async function verResultados() {
 
   estado.preferenciasActuales = preferencias;
   renderFiltrosActivos();
+  reiniciarComentarioIA();
 
   const cont = document.getElementById("lista-resultados");
   cont.innerHTML = `<p class="aviso">Buscando...</p>`;
@@ -233,6 +234,50 @@ function renderFiltrosActivos() {
     panel.open = true;
     panel.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+}
+
+// ---------- Comentario sobre el perfil (IA, opcional) ----------
+async function generarComentarioIA() {
+  const boton = document.getElementById("btn-comentario-ia");
+  const cont = document.getElementById("comentario-ia");
+  boton.disabled = true;
+  boton.textContent = "Generando...";
+  cont.innerHTML = "";
+
+  // Los campos amplios se los damos ya calculados por nuestro propio motor
+  // -- el prompt del backend no deja que la IA invente otros ni mencione
+  // carreras/universidades por su cuenta.
+  const camposPrincipales = [...new Set(
+    estado.resultadosCompletos
+      .slice()
+      .sort((a, b) => b.score_final - a.score_final)
+      .map((r) => r.CAMPO_AMPLIO_NORMALIZADO)
+  )].slice(0, 3);
+
+  try {
+    const data = await apiPost("/api/comentario-perfil", {
+      perfil_riasec: estado.perfilRiasec,
+      campos_principales: camposPrincipales,
+    });
+    cont.innerHTML = `
+      <div class="comentario-texto">${escaparHtml(data.comentario).replace(/\n+/g, "<br>")}</div>
+      <div class="comentario-nota">Comentario generado por IA (Groq/Llama) -- orientativo, no reemplaza asesoría vocacional profesional.</div>`;
+    boton.style.display = "none";
+  } catch (e) {
+    // Falla silenciosa a propósito (cuota gratuita agotada, timeout, etc.):
+    // sin mensaje de error feo, solo se avisa que no está disponible ahora.
+    cont.innerHTML = `<p class="aviso">Comentario no disponible por ahora. Probá de nuevo más tarde.</p>`;
+    boton.disabled = false;
+    boton.textContent = "Generar comentario sobre tu perfil (IA)";
+  }
+}
+
+function reiniciarComentarioIA() {
+  const boton = document.getElementById("btn-comentario-ia");
+  boton.style.display = "";
+  boton.disabled = false;
+  boton.textContent = "Generar comentario sobre tu perfil (IA)";
+  document.getElementById("comentario-ia").innerHTML = "";
 }
 
 function valorOVacio(id) {
@@ -424,6 +469,8 @@ function renderLeyendaDiagrama(porTier, maxPorAnillo) {
     <div class="item"><span class="swatch" style="background:var(--tier-intermedio)"></span>Afinidad intermedia (${etiquetaConteo("intermedio")})</div>
     <div class="item"><span class="swatch" style="background:var(--tier-alejada)"></span>Más alejadas (${etiquetaConteo("alejada")})</div>`;
 }
+
+document.getElementById("btn-comentario-ia").addEventListener("click", generarComentarioIA);
 
 document.getElementById("filtro-afinidad").addEventListener("input", (ev) => {
   document.getElementById("valor-filtro-afinidad").textContent = `Desde ${ev.target.value}%`;

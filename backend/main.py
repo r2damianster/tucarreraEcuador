@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -44,6 +45,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Comentario de IA sobre el perfil vocacional (opcional -- ver /api/comentario-perfil).
+# La key vive SOLO acá (variable de entorno del backend, nunca en el frontend).
+# Si no está configurada, el endpoint devuelve 503 y el frontend lo maneja en
+# silencio (sin mostrar error feo al estudiante).
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 _motor: Optional["motor_mod.MotorRecomendacion"] = None
 
@@ -86,6 +95,15 @@ class PreferenciasIn(BaseModel):
 class SolicitudRecomendacion(BaseModel):
     perfil_riasec: PerfilRiasec
     preferencias: PreferenciasIn = PreferenciasIn()
+
+
+class ComentarioPerfilIn(BaseModel):
+    perfil_riasec: PerfilRiasec
+    campos_principales: list[str] = Field(
+        default_factory=list,
+        max_length=5,
+        description="Campos amplios ya calculados por el motor (el prompt no deja que la IA invente otros).",
+    )
 
 
 # ---------- Endpoints ----------
@@ -153,3 +171,53 @@ def recomendar(payload: SolicitudRecomendacion):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return {"resultados": resultado.to_dict(orient="records")}
+
+
+@app.post("/api/comentario-perfil")
+def comentario_perfil(payload: ComentarioPerfilIn):
+    """Comentario breve generado por IA (Groq) sobre el perfil vocacional del
+    estudiante. Solo recibe los 6 puntajes RIASEC y los campos amplios que YA
+    calculó el motor (nunca deja que el modelo invente carreras/universidades
+    por su cuenta -- ver el prompt). Falla en silencio (503) si no hay key
+    configurada, se acabó la cuota gratuita de Groq, o cualquier otro error:
+    es una función decorativa, nunca debe tumbar ni bloquear el resto de la
+    app."""
+    if not GROQ_API_KEY:
+        raise HTTPException(503, "Comentario con IA no configurado en este servidor.")
+
+    dims = payload.perfil_riasec.model_dump()
+    resumen_perfil = ", ".join(f"{NOMBRE_DIMENSION[d]} {round(v * 100)}%" for d, v in dims.items())
+    campos = ", ".join(payload.campos_principales[:3]) or "sin campos destacados todavía"
+
+    prompt = (
+        "Sos un orientador vocacional que le escribe directo a un estudiante ecuatoriano "
+        f"de bachillerato. Su perfil vocacional RIASEC (modelo de Holland) es: {resumen_perfil}. "
+        f"Los campos de estudio más afines a ese perfil, ya calculados por un sistema aparte "
+        f"(no los cambies ni agregues otros, no inventes carreras ni universidades): {campos}. "
+        "Escribí un comentario breve (100 a 150 palabras), en español neutro, reflexivo y "
+        "motivador sobre este perfil vocacional -- qué tipo de actividades y ambientes de "
+        "trabajo suelen encajarle a alguien con este perfil. No prometas éxito laboral ni "
+        "resultados garantizados. Cerrá recordando que la decisión final de qué estudiar es "
+        "del estudiante, y que conviene conversarlo con un orientador vocacional real."
+    )
+
+    try:
+        respuesta = httpx.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.7,
+            },
+            timeout=20.0,
+        )
+        respuesta.raise_for_status()
+        datos = respuesta.json()
+        comentario = datos["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"[comentario-perfil] no se pudo generar: {e}")
+        raise HTTPException(503, "No se pudo generar el comentario en este momento.")
+
+    return {"comentario": comentario}
