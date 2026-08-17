@@ -53,72 +53,82 @@
 
   <!-- PASO 3: RESULTADOS -->
   <section class="pantalla" id="pantalla-resultados">
-    <div class="card">
-      <h2>Carreras recomendadas para ti</h2>
-      <p class="aviso">Ordenadas según tu perfil vocacional y tus preferencias.</p>
-      <div class="filtros-activos" id="filtros-activos"></div>
-      <label class="campo campo-slider">
-        <span class="etiqueta">Afinidad mínima a mostrar</span>
-        <input type="range" id="filtro-afinidad" min="0" max="100" step="5" value="80" />
-        <div class="slider-valor" id="valor-filtro-afinidad">Desde 80%</div>
-      </label>
+    <div class="resultados-layout">
+      <aside class="card sidebar-filtros">
+        <details class="panel-filtros" id="panel-filtros">
+          <summary>Filtros</summary>
 
-      <details class="panel-filtros" id="panel-filtros">
-        <summary>Ajustar filtros de búsqueda</summary>
+          <label class="campo campo-slider">
+            <span class="etiqueta">Afinidad mínima a mostrar</span>
+            <input type="range" id="filtro-afinidad" min="0" max="100" step="5" value="80" />
+            <div class="slider-valor" id="valor-filtro-afinidad">Desde 80%</div>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">Modalidad</span>
-          <select id="pref-modalidad"><option value="">Indiferente</option></select>
-        </label>
+          <hr class="separador-filtros" />
 
-        <label class="campo">
-          <span class="etiqueta">Tipo de financiamiento</span>
-          <select id="pref-financiamiento"><option value="">Indiferente</option></select>
-        </label>
+          <label class="campo">
+            <span class="etiqueta">Modalidad</span>
+            <select id="pref-modalidad"><option value="">Indiferente</option></select>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">Tipo de institución</span>
-          <select id="pref-tipo-ies"><option value="">Indiferente</option></select>
-        </label>
+          <label class="campo">
+            <span class="etiqueta">Tipo de financiamiento</span>
+            <select id="pref-financiamiento"><option value="">Indiferente</option></select>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">Nivel de formación</span>
-          <select id="pref-nivel"><option value="">Cualquiera (técnico, tecnológico o tercer nivel)</option></select>
-        </label>
+          <label class="campo">
+            <span class="etiqueta">Tipo de institución</span>
+            <select id="pref-tipo-ies"><option value="">Indiferente</option></select>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">Provincia donde vives</span>
-          <select id="pref-provincia"><option value="">Prefiero no decir / indiferente</option></select>
-        </label>
+          <label class="campo">
+            <span class="etiqueta">Nivel de formación</span>
+            <select id="pref-nivel"><option value="">Cualquiera (técnico, tecnológico o tercer nivel)</option></select>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">Cantón donde vives</span>
-          <select id="pref-canton"><option value="">—</option></select>
-        </label>
+          <label class="campo">
+            <span class="etiqueta">Provincia donde vives</span>
+            <select id="pref-provincia"><option value="">Prefiero no decir / indiferente</option></select>
+          </label>
 
-        <label class="campo">
-          <span class="etiqueta">¿Qué tan importante es estudiar cerca de casa?</span>
-          <input type="range" id="pref-cercania" min="0" max="100" value="0" />
-          <div class="slider-valor" id="valor-cercania">Indiferente (0%)</div>
-        </label>
-      </details>
-    </div>
+          <label class="campo">
+            <span class="etiqueta">Cantón donde vives</span>
+            <select id="pref-canton"><option value="">—</option></select>
+          </label>
 
-    <div class="card" id="card-diagrama">
-      <h3>Mapa de afinidad</h3>
-      <p class="aviso">
-        El centro representa tu perfil. Cuanto más cerca de ahí esté un punto, más afín es esa carrera a tu perfil RIASEC.
-      </p>
-      <div class="diagrama-wrap">
-        <div id="diagrama-afinidad"></div>
-        <div class="dv-detalle" id="dv-detalle">
-          <p class="aviso">Toca o pasa el mouse sobre un punto para ver el detalle de esa carrera.</p>
+          <label class="campo">
+            <span class="etiqueta">¿Qué tan importante es estudiar cerca de casa?</span>
+            <input type="range" id="pref-cercania" min="0" max="100" value="0" />
+            <div class="slider-valor" id="valor-cercania">Indiferente (0%)</div>
+          </label>
+        </details>
+      </aside>
+
+      <div class="resultados-principal">
+        <div class="card">
+          <h2>Carreras recomendadas para ti</h2>
+          <p class="aviso">Ordenadas según tu perfil vocacional y tus preferencias.</p>
+          <div class="filtros-activos" id="filtros-activos"></div>
         </div>
+
+        <div class="card" id="card-diagrama">
+          <h3>Mapa de afinidad</h3>
+          <p class="aviso">
+            El centro representa tu perfil. Cuanto más cerca de ahí esté un punto, más afín es esa carrera a tu perfil RIASEC.
+          </p>
+          <div class="diagrama-wrap">
+            <div id="diagrama-afinidad"></div>
+            <div class="dv-detalle" id="dv-detalle">
+              <p class="aviso">Toca o pasa el mouse sobre un punto para ver el detalle de esa carrera.</p>
+            </div>
+          </div>
+          <div class="dv-leyenda" id="dv-leyenda"></div>
+        </div>
+
+        <div id="lista-resultados"></div>
       </div>
-      <div class="dv-leyenda" id="dv-leyenda"></div>
     </div>
 
-    <div id="lista-resultados"></div>
     <div class="botones-nav">
       <button class="secundario" id="btn-volver-preferencias">Ver mi perfil vocacional</button>
       <button class="primario" id="btn-reiniciar">Volver a empezar</button>

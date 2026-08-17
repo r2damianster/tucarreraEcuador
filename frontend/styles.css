@@ -40,7 +40,9 @@ main {
   max-width: 860px;
   margin: 24px auto 80px;
   padding: 0 16px;
+  transition: max-width 0.15s ease;
 }
+main.main-ancho { max-width: 1040px; }
 
 .pasos {
   display: flex;
@@ -175,8 +177,22 @@ select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; borde
 .panel-filtros summary::-webkit-details-marker { display: none; }
 .panel-filtros summary::before { content: "▸ "; }
 .panel-filtros[open] summary::before { content: "▾ "; }
-.panel-filtros .campo { margin-top: 14px;
-  padding: 0;
+.panel-filtros .campo { margin-top: 14px; }
+
+.separador-filtros { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ---------- Resultados: sidebar de filtros + contenido principal ---------- */
+.sidebar-filtros .panel-filtros { margin-top: 0; border-top: none; padding-top: 0; }
+.sidebar-filtros .panel-filtros summary { font-size: 1rem; }
+
+@media (min-width: 860px) {
+  .resultados-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+    gap: 16px;
+  }
+  .sidebar-filtros { position: sticky; top: 16px; }
 }
 .contador-resultados { font-weight: 600; margin-bottom: 12px; }
 

@@ -37,6 +37,14 @@ async function apiPost(ruta, body) {
 function mostrarPantalla(nombre) {
   document.querySelectorAll("section.pantalla").forEach((s) => s.classList.remove("visible"));
   document.getElementById(`pantalla-${nombre}`).classList.add("visible");
+  document.querySelector("main").classList.toggle("main-ancho", nombre === "resultados");
+
+  // En desktop el panel de filtros vive abierto como sidebar (no tiene
+  // sentido que arranque colapsado si ya hay espacio al lado); en mobile
+  // sigue colapsado por defecto para no tapar la pantalla.
+  if (nombre === "resultados" && window.matchMedia("(min-width: 860px)").matches) {
+    document.getElementById("panel-filtros").open = true;
+  }
 
   const orden = { test: 1, preferencias: 2, resultados: 3 };
   document.querySelectorAll(".pasos .paso").forEach((el) => {
@@ -234,7 +242,12 @@ function valorOVacio(id) {
 
 function aplicarFiltroAfinidad() {
   const umbral = Number(document.getElementById("filtro-afinidad").value) / 100;
-  const filtrados = estado.resultadosCompletos.filter((r) => r.similitud_riasec >= umbral);
+  // Se filtra por score_final (afinidad RIASEC + cercanía ya mezcladas, el
+  // mismo puntaje que ordena la lista) y no por similitud_riasec pura --
+  // si no, subir "importancia de cercanía" a 100% reordenaba todo por
+  // distancia pero el umbral seguía dejando pasar cualquier cosa lejana con
+  // buena afinidad RIASEC (Galápagos incluido), sin importar cuán lejos.
+  const filtrados = estado.resultadosCompletos.filter((r) => r.score_final >= umbral);
   renderResultados(filtrados, umbral);
   renderDiagrama(filtrados);
 }
@@ -253,9 +266,13 @@ function renderResultados(resultados, umbralActual) {
   contador.textContent = `Mostrando ${resultados.length} de ${estado.resultadosCompletos.length} carreras que cumplen tus filtros.`;
   cont.innerHTML = "";
   cont.appendChild(contador);
+  const pesoCercania = (estado.preferenciasActuales && estado.preferenciasActuales.peso_cercania) || 0;
   resultados.forEach((r) => {
     const div = document.createElement("div");
     div.className = "resultado-item";
+    const chipCercania = pesoCercania > 0
+      ? `<span class="tag">Cercanía ${Math.round(r.score_cercania * 100)}%</span>`
+      : "";
     div.innerHTML = `
       <h3>${titleCase(r.NOMBRE_CARRERA)}</h3>
       <div class="ies">${titleCase(r.NOMBRE_IES)} · ${titleCase(r.CANTÓN)}, ${titleCase(r.PROVINCIA)}</div>
@@ -264,6 +281,7 @@ function renderResultados(resultados, umbralActual) {
         <span class="tag">${titleCase(r.MODALIDAD)}</span>
         <span class="tag">${titleCase(r.TIPO_FINANCIAMIENTO)}</span>
         <span class="tag">Afinidad ${Math.round(r.similitud_riasec * 100)}%</span>
+        ${chipCercania}
       </div>`;
     cont.appendChild(div);
   });
@@ -281,15 +299,18 @@ const NOMBRE_TIER = {
   intermedio: "Afinidad intermedia",
   alejada: "Más alejada",
 };
-// Tier = umbral sobre el score real de afinidad (no ranking de campo amplio
-// -- eso hacía que una carrera con 85% de afinidad cayera "alejada" solo por
-// tener el campo amplio en 7mo lugar). Con esto, quien tiene 80%+ siempre
-// aparece en el núcleo, sin importar cuántos otros campos midan más.
+// Tier = umbral sobre score_final (afinidad RIASEC ya mezclada con cercanía
+// según el peso que el estudiante le dio -- NO sobre similitud_riasec pura).
+// Usar similitud pura acá desacoplaba el anillo de lo que el slider de
+// afinidad mínima realmente filtra: con "importancia de cercanía" al 100%,
+// una carrera lejana con buena afinidad RIASEC (Galápagos, por ejemplo)
+// terminaba en "núcleo" aunque el ranking real la mandara al final por
+// distancia. Con score_final, ambos quedan consistentes.
 const UMBRAL_NUCLEO = 0.8;
 const UMBRAL_INTERMEDIO = 0.5;
-function calcularTier(similitud) {
-  if (similitud >= UMBRAL_NUCLEO) return "nucleo";
-  if (similitud >= UMBRAL_INTERMEDIO) return "intermedio";
+function calcularTier(puntaje) {
+  if (puntaje >= UMBRAL_NUCLEO) return "nucleo";
+  if (puntaje >= UMBRAL_INTERMEDIO) return "intermedio";
   return "alejada";
 }
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~137.5°, distribución tipo girasol
@@ -326,7 +347,7 @@ function renderDiagrama(resultados) {
   }
 
   const porTier = { nucleo: [], intermedio: [], alejada: [] };
-  resultados.forEach((r) => porTier[calcularTier(r.similitud_riasec)].push(r));
+  resultados.forEach((r) => porTier[calcularTier(r.score_final)].push(r));
   Object.values(porTier).forEach((lista) => lista.sort((a, b) => b.score_final - a.score_final));
 
   // El diagrama es un vistazo visual, no un listado -- con el slider mostrando
@@ -354,7 +375,7 @@ function renderDiagrama(resultados) {
       const cy = y.toFixed(1);
       const titulo = `${escaparHtml(resultado.NOMBRE_CARRERA)} — ${Math.round(resultado.similitud_riasec * 100)}% afinidad`;
       return `
-        <circle class="dv-punto ${calcularTier(resultado.similitud_riasec)}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
+        <circle class="dv-punto ${calcularTier(resultado.score_final)}" cx="${cx}" cy="${cy}" r="5" data-idx="${i}"><title>${titulo}</title></circle>
         <circle class="dv-punto-hit" cx="${cx}" cy="${cy}" r="12" data-idx="${i}" />`;
     })
     .join("");
@@ -377,13 +398,18 @@ function renderDiagrama(resultados) {
 
 function mostrarDetalleDiagrama(r) {
   const cont = document.getElementById("dv-detalle");
+  const pesoCercania = (estado.preferenciasActuales && estado.preferenciasActuales.peso_cercania) || 0;
+  const chipCercania = pesoCercania > 0
+    ? `<span class="tag">Cercanía ${Math.round(r.score_cercania * 100)}%</span>`
+    : "";
   cont.innerHTML = `
     <h4>${titleCase(r.NOMBRE_CARRERA)}</h4>
     <div class="ies">${titleCase(r.NOMBRE_IES)} · ${titleCase(r.CANTÓN)}, ${titleCase(r.PROVINCIA)}</div>
     <div class="etiquetas">
       <span class="tag">${titleCase(r.CAMPO_AMPLIO_NORMALIZADO)}</span>
-      <span class="tag">${NOMBRE_TIER[calcularTier(r.similitud_riasec)]}</span>
+      <span class="tag">${NOMBRE_TIER[calcularTier(r.score_final)]}</span>
       <span class="tag">Afinidad ${Math.round(r.similitud_riasec * 100)}%</span>
+      ${chipCercania}
     </div>`;
 }
 
