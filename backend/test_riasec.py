@@ -1,6 +1,6 @@
 """
 Ítems del test vocacional RIASEC, traducidos al español a partir del
-O*NET Interest Profiler Short Form (paper-and-pencil version), publicado
+O*NET Interest Profiler Short Form (paper-and-pencil version, 2010), publicado
 por el National Center for O*NET Development (US Dept. of Labor) bajo una
 licencia que permite explícitamente redistribuir el instrumento y construir
 nuevas evaluaciones a partir de él. Fuente original (inglés):

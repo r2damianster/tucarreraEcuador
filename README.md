@@ -121,7 +121,7 @@ Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras 
 ## El test vocacional (`backend/test_riasec.py`)
 
 60 actividades (10 por cada dimensión RIASEC), traducidas al español a partir del
-**O*NET Interest Profiler Short Form** (National Center for O*NET Development, US Dept.
+**O*NET Interest Profiler Short Form** (National Center for O*NET Development, 2010, US Dept.
 of Labor) — instrumento con licencia abierta que permite explícitamente redistribuirlo y
 construir nuevas evaluaciones a partir de él. El orden de presentación intercala las 6
 dimensiones para no revelar la categoría de cada actividad mientras el estudiante
@@ -193,5 +193,6 @@ responda y guarda una captura en `docs/screenshot_resultados.png`.
 - Coordenadas de cantones: gist público "Coordenadas de todos los cantones de Ecuador"
   (c4rlosviteri), con 2 correcciones manuales verificadas contra Wikipedia /
   geodatos.net / world-airport-codes.
-- Test vocacional: O*NET Interest Profiler Short Form, National Center for O*NET
-  Development (onetcenter.org), traducido al español para este proyecto.
+- Test vocacional: National Center for O*NET Development. (2010). *O*NET Interest Profiler
+  Short Form*. U.S. Department of Labor (onetcenter.org). Traducido al español para este
+  proyecto.
