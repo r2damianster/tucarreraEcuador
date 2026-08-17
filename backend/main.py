@@ -190,15 +190,19 @@ def comentario_perfil(payload: ComentarioPerfilIn):
     campos = ", ".join(payload.campos_principales[:3]) or "sin campos destacados todavía"
 
     prompt = (
-        "Sos un orientador vocacional que le escribe directo a un estudiante ecuatoriano "
-        f"de bachillerato. Su perfil vocacional RIASEC (modelo de Holland) es: {resumen_perfil}. "
+        "Redactá un comentario breve (100 a 150 palabras) sobre el perfil vocacional RIASEC "
+        f"(modelo de Holland) de un estudiante ecuatoriano de bachillerato: {resumen_perfil}. "
         f"Los campos de estudio más afines a ese perfil, ya calculados por un sistema aparte "
         f"(no los cambies ni agregues otros, no inventes carreras ni universidades): {campos}. "
-        "Escribí un comentario breve (100 a 150 palabras), en español neutro, reflexivo y "
-        "motivador sobre este perfil vocacional -- qué tipo de actividades y ambientes de "
-        "trabajo suelen encajarle a alguien con este perfil. No prometas éxito laboral ni "
-        "resultados garantizados. Cerrá recordando que la decisión final de qué estudiar es "
-        "del estudiante, y que conviene conversarlo con un orientador vocacional real."
+        "Español neutro, tono reflexivo y motivador, en tercera persona o hablándole directo "
+        "al estudiante sobre SU perfil -- pero NUNCA en primera persona como si vos fueras un "
+        "orientador vocacional, un profesor o cualquier persona real: sos un comentario "
+        "automático, no un interlocutor. No digas 'conversá conmigo' ni nada que sugiera que "
+        "hay una relación o seguimiento continuo con quien escribe esto. Describí qué tipo de "
+        "actividades y ambientes de trabajo suelen encajarle a alguien con este perfil. No "
+        "prometas éxito laboral ni resultados garantizados. Cerrá recordando que la decisión "
+        "final de qué estudiar es del estudiante, y que conviene conversarlo con un orientador "
+        "vocacional real (una persona, no este comentario)."
     )
 
     try:
