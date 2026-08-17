@@ -1,5 +1,7 @@
 # Recomendador de Carreras Ecuador
 
+**Autor:** Arturo Rodríguez, PhD ([ORCID 0000-0002-7017-9443](https://orcid.org/0000-0002-7017-9443)) — docente, investigador y videocoder.
+
 Sistema de orientación vocacional del proyecto `RecomendadorCarrerasEcuador`: un test de
 intereses (modelo RIASEC de Holland, basado en el O*NET Interest Profiler) que se cruza,
 con **scikit-learn**, contra la base de datos abierta de oferta académica de las IES del
@@ -70,6 +72,15 @@ dominio, define `window.API_BASE` antes de cargar `app.js` (por defecto apunta a
   las carreras que pasan el filtro duro (sin tope, sin diversificar), ordenadas por
   `score_final` desc. El frontend decide cuánto mostrar y cómo agrupar por afinidad
   (`tier`) en el cliente — ver más abajo.
+- `POST /api/comentario-perfil` — `{"perfil_riasec": {...}, "campos_principales": [...]}` ->
+  `{"comentario": "..."}`, un comentario breve generado por IA (Groq, modelo
+  `llama-3.1-8b-instant` por defecto) sobre el perfil vocacional del estudiante. Requiere la
+  variable de entorno `GROQ_API_KEY` en el backend (**nunca** en el frontend/Vercel — el
+  frontend es estático y público, cualquier secreto ahí queda expuesto). Sin esa variable, o
+  si Groq falla/agota la cuota gratuita, devuelve `503` — el frontend lo maneja en silencio
+  (botón "no disponible por ahora", sin error visible). El prompt solo recibe los campos
+  amplios que ya calculó el propio motor; no se deja que el modelo invente carreras o
+  universidades.
 
 Documentación interactiva automática en `http://127.0.0.1:8000/docs` mientras la API corre.
 
@@ -155,6 +166,13 @@ responda y guarda una captura en `docs/screenshot_resultados.png`.
   `frontend/config.js`, que fija `window.API_BASE` a esa URL en producción). Para
   desarrollo local hay que sobreescribir `config.js` o cargar `window.API_BASE` antes de
   `app.js` apuntando a tu API local.
+  - Variables de entorno del servicio en Render (Environment tab, no en Vercel):
+    `ALLOWED_ORIGINS` (CORS) y opcionalmente `GROQ_API_KEY` / `GROQ_MODEL` (comentario IA,
+    ver endpoint más arriba — sin esta el resto de la app funciona igual, esa función
+    específica queda deshabilitada).
+  - El auto-deploy de Render vía webhook de GitHub no anduvo confiable en la práctica (ver
+    sesión 2026-08-16) — si un push no dispara redeploy solo, forzarlo manual desde el
+    dashboard o `render deploys create <service-id>` (Render CLI).
 
 ## Próximos pasos
 
@@ -171,8 +189,7 @@ responda y guarda una captura en `docs/screenshot_resultados.png`.
 ## Fuente de los datos
 
 - Base de oferta académica: Secretaría de Educación Superior, Ciencia, Tecnología e
-  Innovación (SENESCYT), Portal Único de Datos Abiertos del Ecuador (27 de febrero de
-  2025).
+  Innovación (SENESCYT), Portal Único de Datos Abiertos del Ecuador (5 de febrero de 2025).
 - Coordenadas de cantones: gist público "Coordenadas de todos los cantones de Ecuador"
   (c4rlosviteri), con 2 correcciones manuales verificadas contra Wikipedia /
   geodatos.net / world-airport-codes.
