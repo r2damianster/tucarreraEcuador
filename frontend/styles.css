@@ -142,6 +142,44 @@ select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; borde
 
 .slider-valor { font-size: 0.85rem; color: var(--ink-soft); margin-top: 4px; }
 
+.filtros-activos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.filtros-activos .chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-filtro-vacio { background: var(--border); color: var(--ink-soft); }
+.link-editar {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.panel-filtros {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.panel-filtros summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--accent);
+  list-style: none;
+}
+.panel-filtros summary::-webkit-details-marker { display: none; }
+.panel-filtros summary::before { content: "▸ "; }
+.panel-filtros[open] summary::before { content: "▾ "; }
+.panel-filtros .campo { margin-top: 14px;
+  padding: 0;
+}
+.contador-resultados { font-weight: 600; margin-bottom: 12px; }
+
 .resultado-item {
   border: 1px solid var(--border);
   border-radius: var(--radius);

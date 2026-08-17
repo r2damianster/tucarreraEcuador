@@ -12,6 +12,7 @@ const estado = {
   opciones: null,
   cantonesPorProvincia: {},
   resultadosCompletos: [], // todo lo que devolvió la API para el perfil/preferencias actuales, sin filtrar
+  preferenciasActuales: null,
 };
 
 // ---------- Utilidades ----------
@@ -129,6 +130,18 @@ async function cargarOpciones() {
     document.getElementById("valor-cercania").textContent =
       v === 0 ? "Indiferente (0%)" : `${v}% de importancia`;
   });
+
+  // El panel de filtros vive en la pantalla de resultados (ver
+  // panel-filtros en index.html): cambiar cualquiera de estos vuelve a
+  // pedir recomendaciones sin tener que navegar a otra pantalla. "input"
+  // en el slider ya actualiza la etiqueta arriba; "change" (se suelta el
+  // mouse) es lo que dispara la búsqueda, para no repetirla en cada pixel.
+  ["pref-modalidad", "pref-financiamiento", "pref-tipo-ies", "pref-nivel", "pref-canton", "pref-cercania"]
+    .forEach((id) => {
+      document.getElementById(id).addEventListener("change", () => {
+        if (estado.perfilRiasec) verResultados();
+      });
+    });
 }
 
 function llenarSelect(idSelect, valores) {
@@ -160,6 +173,9 @@ async function verResultados() {
     peso_cercania: Number(document.getElementById("pref-cercania").value) / 100,
   };
 
+  estado.preferenciasActuales = preferencias;
+  renderFiltrosActivos();
+
   const cont = document.getElementById("lista-resultados");
   cont.innerHTML = `<p class="aviso">Buscando...</p>`;
   mostrarPantalla("resultados");
@@ -175,6 +191,40 @@ async function verResultados() {
   } catch (e) {
     cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
   }
+}
+
+function renderFiltrosActivos() {
+  const cont = document.getElementById("filtros-activos");
+  const p = estado.preferenciasActuales;
+  if (!p) {
+    cont.innerHTML = "";
+    return;
+  }
+
+  const chips = [];
+  if (p.modalidad) chips.push(titleCase(p.modalidad));
+  if (p.financiamiento) chips.push(titleCase(p.financiamiento));
+  if (p.tipo_ies) chips.push(titleCase(p.tipo_ies));
+  if (p.niveles && p.niveles.length) chips.push(titleCase(p.niveles[0]));
+  // provincia_estudiante no afecta el score (solo canton_estudiante, ver
+  // motor `_score_cercania`) -- no se usa acá para no sugerir un efecto
+  // que no existe.
+  if (p.peso_cercania > 0 && p.canton_estudiante) {
+    chips.push(`Cerca de ${titleCase(p.canton_estudiante)} · ${Math.round(p.peso_cercania * 100)}%`);
+  }
+
+  const chipsHtml = chips.length
+    ? chips.map((c) => `<span class="tag">${c}</span>`).join("")
+    : `<span class="tag chip-filtro-vacio">Sin filtros de búsqueda (todas las modalidades, financiamientos y ubicaciones)</span>`;
+
+  cont.innerHTML = `
+    <div class="chips-wrap">${chipsHtml}</div>
+    <button type="button" class="link-editar" id="btn-editar-filtros">Editar filtros</button>`;
+  document.getElementById("btn-editar-filtros").addEventListener("click", () => {
+    const panel = document.getElementById("panel-filtros");
+    panel.open = true;
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function valorOVacio(id) {
@@ -199,8 +249,8 @@ function renderResultados(resultados, umbralActual) {
     return;
   }
   const contador = document.createElement("p");
-  contador.className = "aviso";
-  contador.textContent = `Mostrando ${resultados.length} de ${estado.resultadosCompletos.length} carreras.`;
+  contador.className = "contador-resultados";
+  contador.textContent = `Mostrando ${resultados.length} de ${estado.resultadosCompletos.length} carreras que cumplen tus filtros.`;
   cont.innerHTML = "";
   cont.appendChild(contador);
   resultados.forEach((r) => {

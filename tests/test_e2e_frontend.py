@@ -54,23 +54,35 @@ with sync_playwright() as p:
     resumen = page.inner_text("#resumen-perfil")
     print("\nResumen del perfil:\n", resumen)
 
-    # elegir preferencias
+    # Los filtros (modalidad, provincia/cantón, cercanía) viven en un panel
+    # colapsable dentro de la pantalla de resultados, no en "preferencias"
+    # -- primero hay que llegar ahí con el perfil por defecto.
+    page.click("#btn-ver-resultados")
+    page.wait_for_selector("#pantalla-resultados.visible")
+    page.wait_for_timeout(800)
+    n_sin_filtros = page.eval_on_selector_all(".resultado-item", "els => els.length")
+    print("\nTarjetas sin filtros de búsqueda:", n_sin_filtros)
+
+    page.click("#btn-editar-filtros")
+    page.wait_for_selector("#panel-filtros[open]")
+
     page.select_option("#pref-modalidad", "PRESENCIAL")
+    page.wait_for_timeout(600)  # dispara refetch (evento "change")
     page.select_option("#pref-provincia", "PICHINCHA")
     page.wait_for_timeout(200)
     opciones_canton = page.eval_on_selector_all("#pref-canton option", "els => els.map(e => e.value)")
     print("Cantones cargados para Pichincha:", opciones_canton[:5], "...")
     if "QUITO" in opciones_canton:
         page.select_option("#pref-canton", "QUITO")
-    page.fill("#pref-cercania", "0")
+        page.wait_for_timeout(600)
     page.eval_on_selector("#pref-cercania", "el => el.value = 40")
     page.dispatch_event("#pref-cercania", "input")
-
-    page.click("#btn-ver-resultados")
-    page.wait_for_selector("#pantalla-resultados.visible")
+    page.dispatch_event("#pref-cercania", "change")
     page.wait_for_timeout(800)
+
+    print("\nFiltros activos:", page.inner_text("#filtros-activos").replace("\n", " | "))
     resultados_html = page.inner_text("#lista-resultados")
-    print("\n--- Resultados ---\n", resultados_html[:2000])
+    print("\n--- Resultados (con filtros) ---\n", resultados_html[:2000])
 
     n_resultados = page.eval_on_selector_all(".resultado-item", "els => els.length")
     print("\nNúmero de tarjetas de resultado:", n_resultados)

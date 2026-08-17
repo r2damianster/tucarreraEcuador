@@ -26,9 +26,14 @@ backend/
   main.py                     API FastAPI: expone el test y el motor de recomendación
 frontend/
   index.html, app.js, styles.css   App web (vanilla JS) que consume la API:
-                                    test -> preferencias -> resultados (lista +
-                                    "Mapa de afinidad", diagrama de círculos
-                                    concéntricos por tier)
+                                    test -> perfil -> resultados (lista + "Mapa
+                                    de afinidad", diagrama de círculos
+                                    concéntricos por tier). Los filtros de
+                                    búsqueda (modalidad, financiamiento,
+                                    cercanía, etc.) viven en un panel colapsable
+                                    dentro de resultados, no en la pantalla de
+                                    perfil -- cambiarlos ahí vuelve a pedir
+                                    recomendaciones sin salir de la pantalla.
 tests/
   test_e2e_frontend.py        Prueba de humo de punta a punta con Playwright
 docs/
