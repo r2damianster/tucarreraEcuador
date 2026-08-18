@@ -112,6 +112,16 @@ section.pantalla.visible { display: block; }
 .item-test:last-child { border-bottom: none; }
 .item-test .texto { font-size: 0.98rem; }
 
+.cargando-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  color: var(--ink-soft);
+}
+.cargando-items .spinner { width: 36px; height: 36px; }
+
 .switch-grupo { display: flex; gap: 6px; flex-shrink: 0; }
 .switch-grupo button {
   border: 1px solid var(--border);
