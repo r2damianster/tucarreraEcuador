@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-label="Hexágono RIASEC de Holland y el perfil del estudiante como vector de seis dimensiones">
+<style>
+  text { font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+  .titulo   { font-size: 19px; font-weight: 600; fill: #1f2933; }
+  .etiqueta { font-size: 14px; fill: #52606d; }
+  .dato     { font-size: 15px; font-weight: 600; fill: #1f2933; }
+  .pie      { font-size: 12px; fill: #7b8794; }
+  .codigo   { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 13px; fill: #1c5cab; }
+</style>
+<rect width="900" height="430" fill="#ffffff"/>
+<defs>
+  <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
+  </marker>
+  <marker id="flecha-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a78d6"/>
+  </marker>
+  <marker id="flecha-naranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb6834"/>
+  </marker>
+</defs>
+<text x="40.0" y="46.0" class="titulo" text-anchor="start">Las 6 dimensiones de Holland</text>
+<text x="40.0" y="68.0" class="pie" text-anchor="start">Adyacentes = intereses afines · opuestas = antagónicas</text>
+<polygon points="250.0,144.0 338.3,195.0 338.3,297.0 250.0,348.0 161.7,297.0 161.7,195.0" fill="none" stroke="#d9e2ec" stroke-width="2"/>
+<line x1="250.0" y1="144.0" x2="338.3" y2="297.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="250.0" y1="144.0" x2="250.0" y2="348.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="250.0" y1="144.0" x2="161.7" y2="297.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="338.3" y1="195.0" x2="250.0" y2="348.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="338.3" y1="195.0" x2="161.7" y2="297.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="338.3" y1="195.0" x2="161.7" y2="195.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="338.3" y1="297.0" x2="161.7" y2="297.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="338.3" y1="297.0" x2="161.7" y2="195.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<line x1="250.0" y1="348.0" x2="161.7" y2="195.0" stroke="#d9e2ec" stroke-width="1" opacity="0.7"/>
+<circle cx="250.0" cy="144.0" r="24" fill="#2a78d6"/>
+<text x="250.0" y="151.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">R</text>
+<text x="250.0" y="98.0" class="dato" text-anchor="middle">Realista</text>
+<text x="250.0" y="114.0" class="pie" text-anchor="middle">manos, máquinas</text>
+<circle cx="338.3" cy="195.0" r="24" fill="#2a78d6"/>
+<text x="338.3" y="202.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">I</text>
+<text x="372.3" y="193.0" class="dato" text-anchor="start">Investigativo</text>
+<text x="372.3" y="211.0" class="pie" text-anchor="start">analizar, resolver</text>
+<circle cx="338.3" cy="297.0" r="24" fill="#2a78d6"/>
+<text x="338.3" y="304.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">A</text>
+<text x="372.3" y="295.0" class="dato" text-anchor="start">Artístico</text>
+<text x="372.3" y="313.0" class="pie" text-anchor="start">crear, expresar</text>
+<circle cx="250.0" cy="348.0" r="24" fill="#2a78d6"/>
+<text x="250.0" y="355.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">S</text>
+<text x="250.0" y="396.0" class="dato" text-anchor="middle">Social</text>
+<text x="250.0" y="413.0" class="pie" text-anchor="middle">ayudar, enseñar</text>
+<circle cx="161.7" cy="297.0" r="24" fill="#2a78d6"/>
+<text x="161.7" y="304.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">E</text>
+<text x="127.7" y="295.0" class="dato" text-anchor="end">Emprendedor</text>
+<text x="127.7" y="313.0" class="pie" text-anchor="end">liderar, negociar</text>
+<circle cx="161.7" cy="195.0" r="24" fill="#2a78d6"/>
+<text x="161.7" y="202.0" text-anchor="middle" style="font-size:19px;font-weight:700;fill:#ffffff">C</text>
+<text x="127.7" y="193.0" class="dato" text-anchor="end">Convencional</text>
+<text x="127.7" y="211.0" class="pie" text-anchor="end">ordenar, procesar</text>
+<rect x="542.0" y="50.0" width="318.0" height="250.0" rx="10" fill="#f5f7fa" stroke="#d9e2ec"/>
+<text x="562.0" y="78.0" class="titulo" text-anchor="start">Un perfil = 6 números</text>
+<text x="562.0" y="98.0" class="pie" text-anchor="start">60 ítems sí/no · 10 por dimensión</text>
+<text x="562.0" y="137.0" class="dato" text-anchor="start">R</text>
+<rect x="584.0" y="125.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="125.0" width="38.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="137.0" class="dato" text-anchor="start">0.2</text>
+<text x="562.0" y="163.0" class="dato" text-anchor="start">I</text>
+<rect x="584.0" y="151.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="151.0" width="152.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="163.0" class="dato" text-anchor="start">0.8</text>
+<text x="562.0" y="189.0" class="dato" text-anchor="start">A</text>
+<rect x="584.0" y="177.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="177.0" width="57.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="189.0" class="dato" text-anchor="start">0.3</text>
+<text x="562.0" y="215.0" class="dato" text-anchor="start">S</text>
+<rect x="584.0" y="203.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="203.0" width="114.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="215.0" class="dato" text-anchor="start">0.6</text>
+<text x="562.0" y="241.0" class="dato" text-anchor="start">E</text>
+<rect x="584.0" y="229.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="229.0" width="38.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="241.0" class="dato" text-anchor="start">0.2</text>
+<text x="562.0" y="267.0" class="dato" text-anchor="start">C</text>
+<rect x="584.0" y="255.0" width="190.0" height="14" rx="7.0" fill="#ffffff" stroke="#d9e2ec"/>
+<rect x="584.0" y="255.0" width="57.0" height="14" rx="7.0" fill="#2a78d6"/>
+<text x="788.0" y="267.0" class="dato" text-anchor="start">0.3</text>
+<text x="562.0" y="316.0" class="pie" text-anchor="start">Ese vector es la entrada del motor.</text>
+</svg>

@@ -1,5 +1,6 @@
 ---
 theme: seriph
+colorSchema: light
 title: Recomendador de Carreras Ecuador
 info: |
   ## Recomendador de Carreras Universitarias del Ecuador
@@ -58,6 +59,20 @@ Test de intereses vocacionales, cruzado con la oferta académica real del Ecuado
 <!--
 Esa es la propuesta central del proyecto: en vez de un test vocacional genérico o una
 tabla de oferta sin cruzar, combinar ambas cosas con un motor de recomendación real.
+-->
+
+---
+layout: image
+image: /diagramas/algoritmo-vocacion.jpg
+backgroundSize: contain
+---
+
+<!--
+Mapa completo antes de entrar en cada pieza: el test produce un vector RIASEC; el filtro
+duro recorta el pool; cada carrera se vectoriza (85% campo amplio + 15% TF-IDF sobre el
+nombre); la similitud coseno mide la afinidad; Haversine aporta la cercanía; y el score
+ponderado ordena el ranking. KMeans queda aparte, para explorar por familias.
+Los diagramas que siguen abren una a una estas cajas -- este es el índice visual.
 -->
 
 ---
@@ -156,7 +171,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">RIASEC · el hexágono de Holland</div>
 
-<img src="/diagramas/riasec-hexagono.jpg" alt="Hexágono RIASEC de Holland y esquema de similitud coseno contra perfiles de carrera"
+<img src="/diagramas/riasec-hexagono.svg" alt="Hexágono RIASEC de Holland y esquema de similitud coseno contra perfiles de carrera"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -188,7 +203,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">Filtro duro · máscaras booleanas en pandas</div>
 
-<img src="/diagramas/filtrado-pandas.jpg" alt="Flujo de filtrado booleano con pandas: dataset completo, máscaras por criterio, dataset refinado"
+<img src="/diagramas/filtrado-pandas.svg" alt="Flujo de filtrado booleano con pandas: dataset completo, máscaras por criterio, dataset refinado"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -226,7 +241,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">Vector de carrera · 85% campo amplio + 15% TF-IDF</div>
 
-<img src="/diagramas/tfidf-campo-amplio.jpg" alt="Construcción del vector de carrera: TF-IDF sobre el nombre combinado con los anclajes RIASEC del campo amplio"
+<img src="/diagramas/tfidf-campo-amplio.svg" alt="Construcción del vector de carrera: TF-IDF sobre el nombre combinado con los anclajes RIASEC del campo amplio"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -259,7 +274,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">Similitud coseno · ángulo entre perfil y carrera</div>
 
-<img src="/diagramas/similitud-coseno.jpg" alt="Similitud coseno entre el vector del estudiante y los vectores de carrera, y esquema de NearestNeighbors"
+<img src="/diagramas/similitud-coseno.svg" alt="Similitud coseno entre el vector del estudiante y los vectores de carrera, y esquema de NearestNeighbors"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -290,7 +305,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">Haversine · distancia sobre la esfera</div>
 
-<img src="/diagramas/haversine.jpg" alt="Fórmula de Haversine aplicada a Quito y Guayaquil, y normalización MinMaxScaler de la distancia"
+<img src="/diagramas/haversine.svg" alt="Fórmula de Haversine aplicada a Quito y Guayaquil, y normalización MinMaxScaler de la distancia"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -322,7 +337,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">Score final · combinación, deduplicación y ranking</div>
 
-<img src="/diagramas/score-deduplicacion.jpg" alt="Score RIASEC y score de cercanía combinados en un score final, con deduplicación y ranking"
+<img src="/diagramas/score-deduplicacion.svg" alt="Score RIASEC y score de cercanía combinados en un score final, con deduplicación y ranking"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 
@@ -355,7 +370,7 @@ class: diagrama
 
 <div class="text-xs uppercase tracking-widest opacity-60 mb-3">KMeans · clústeres vocacionales proyectados con PCA</div>
 
-<img src="/diagramas/kmeans-pca.jpg" alt="Agrupamiento KMeans de carreras en el espacio RIASEC, proyectado a 2D con PCA"
+<img src="/diagramas/kmeans-pca.svg" alt="Agrupamiento KMeans de carreras en el espacio RIASEC, proyectado a 2D con PCA"
      class="block mx-auto max-w-full rounded-lg shadow-md"
      style="max-height: 26rem" />
 

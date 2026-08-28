@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-label="Similitud coseno entre el perfil del estudiante y cuatro carreras, con valores reales">
+<style>
+  text { font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+  .titulo   { font-size: 19px; font-weight: 600; fill: #1f2933; }
+  .etiqueta { font-size: 14px; fill: #52606d; }
+  .dato     { font-size: 15px; font-weight: 600; fill: #1f2933; }
+  .pie      { font-size: 12px; fill: #7b8794; }
+  .codigo   { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 13px; fill: #1c5cab; }
+</style>
+<rect width="900" height="430" fill="#ffffff"/>
+<defs>
+  <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
+  </marker>
+  <marker id="flecha-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a78d6"/>
+  </marker>
+  <marker id="flecha-naranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb6834"/>
+  </marker>
+</defs>
+<text x="40.0" y="46.0" class="titulo" text-anchor="start">La afinidad es el ángulo entre dos vectores</text>
+<text x="40.0" y="68.0" class="pie" text-anchor="start">NearestNeighbors con métrica coseno · no cuenta la magnitud, solo la dirección</text>
+<line x1="210" y1="358" x2="510" y2="358" stroke="#d9e2ec" stroke-width="1.5"/>
+<line x1="210" y1="358" x2="210" y2="96" stroke="#d9e2ec" stroke-width="1.5"/>
+<line x1="210" y1="358" x2="259.1" y2="127.2" stroke="#2a78d6" stroke-width="3" marker-end="url(#flecha-azul)"/>
+<text x="249.1" y="111.2" class="dato" text-anchor="middle" style="fill:#1c5cab">perfil del estudiante</text>
+<line x1="210" y1="358" x2="323.2" y2="181.1" stroke="#eb6834" stroke-width="2" opacity="1.00" marker-end="url(#flecha-naranja)"/>
+<text x="333.2" y="179.1" class="pie" text-anchor="start">Medicina</text>
+<line x1="210" y1="358" x2="383.3" y2="239.4" stroke="#eb6834" stroke-width="2" opacity="0.84" marker-end="url(#flecha-naranja)"/>
+<text x="393.3" y="237.4" class="pie" text-anchor="start">Contabilidad y Auditoría</text>
+<line x1="210" y1="358" x2="400.9" y2="270.4" stroke="#eb6834" stroke-width="2" opacity="0.68" marker-end="url(#flecha-naranja)"/>
+<text x="410.9" y="268.4" class="pie" text-anchor="start">Marketing</text>
+<line x1="210" y1="358" x2="414.3" y2="309.5" stroke="#eb6834" stroke-width="2" opacity="0.52" marker-end="url(#flecha-naranja)"/>
+<text x="424.3" y="307.5" class="pie" text-anchor="start">Ingeniería Mecánica</text>
+<path d="M 225.8 283.7 A 76 76 0 0 1 283.9 340.5" fill="none" stroke="#7b8794" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="284.0" y="292.0" class="dato" text-anchor="start">θ</text>
+<rect x="560.0" y="96.0" width="300.0" height="296.0" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="580.0" y="126.0" class="titulo" text-anchor="start">cos θ = afinidad</text>
+<text x="580.0" y="148.0" class="pie" text-anchor="start">θ chico → cos θ → 1 → perfiles parecidos</text>
+<text x="580.0" y="190.0" class="etiqueta" text-anchor="start">Medicina</text>
+<rect x="580.0" y="198.0" width="190.0" height="16" rx="8.0" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="580.0" y="198.0" width="177.8" height="16" rx="8.0" fill="#eb6834"/>
+<text x="840.0" y="211.0" class="dato" text-anchor="end">0.936</text>
+<text x="580.0" y="236.0" class="etiqueta" text-anchor="start">Contabilidad y Auditoría</text>
+<rect x="580.0" y="244.0" width="190.0" height="16" rx="8.0" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="580.0" y="244.0" width="137.6" height="16" rx="8.0" fill="#eb6834"/>
+<text x="840.0" y="257.0" class="dato" text-anchor="end">0.724</text>
+<text x="580.0" y="282.0" class="etiqueta" text-anchor="start">Marketing</text>
+<rect x="580.0" y="290.0" width="190.0" height="16" rx="8.0" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="580.0" y="290.0" width="113.4" height="16" rx="8.0" fill="#eb6834"/>
+<text x="840.0" y="303.0" class="dato" text-anchor="end">0.597</text>
+<text x="580.0" y="328.0" class="etiqueta" text-anchor="start">Ingeniería Mecánica</text>
+<rect x="580.0" y="336.0" width="190.0" height="16" rx="8.0" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="580.0" y="336.0" width="81.3" height="16" rx="8.0" fill="#eb6834"/>
+<text x="840.0" y="349.0" class="dato" text-anchor="end">0.428</text>
+<text x="580.0" y="374.0" class="pie" text-anchor="start">El pool vuelve completo y ordenado, sin top-k.</text>
+</svg>

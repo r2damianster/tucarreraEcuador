@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-label="Cascada del filtro duro: de 8014 carreras a 939 tras cuatro máscaras booleanas">
+<style>
+  text { font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+  .titulo   { font-size: 19px; font-weight: 600; fill: #1f2933; }
+  .etiqueta { font-size: 14px; fill: #52606d; }
+  .dato     { font-size: 15px; font-weight: 600; fill: #1f2933; }
+  .pie      { font-size: 12px; fill: #7b8794; }
+  .codigo   { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 13px; fill: #1c5cab; }
+</style>
+<rect width="900" height="430" fill="#ffffff"/>
+<defs>
+  <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d"/>
+  </marker>
+  <marker id="flecha-azul" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a78d6"/>
+  </marker>
+  <marker id="flecha-naranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#eb6834"/>
+  </marker>
+</defs>
+<text x="40.0" y="46.0" class="titulo" text-anchor="start">El filtro duro recorta antes de que corra un solo algoritmo</text>
+<text x="40.0" y="68.0" class="pie" text-anchor="start">Álgebra de conjuntos sobre un DataFrame · máscaras booleanas encadenadas con &amp;</text>
+<text x="40.0" y="106.0" class="dato" text-anchor="start">Oferta vigente completa</text>
+<text x="40.0" y="125.0" class="codigo" text-anchor="start">df</text>
+<rect x="470" y="90.0" width="372" height="26" rx="6" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="470" y="90.0" width="372.0" height="26" rx="6" fill="#0d366b"/>
+<text x="832.0" y="109.0" class="dato" text-anchor="end" style="fill:#ffffff">8014</text>
+<line x1="656" y1="118.0" x2="656" y2="142.0" stroke="#7b8794" stroke-width="1.5" marker-end="url(#flecha)"/>
+<text x="40.0" y="164.0" class="dato" text-anchor="start">Solo pregrado</text>
+<text x="40.0" y="183.0" class="codigo" text-anchor="start">df[df['ES_PREGRADO']]</text>
+<rect x="470" y="148.0" width="372" height="26" rx="6" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="470" y="148.0" width="238.7" height="26" rx="6" fill="#2a78d6"/>
+<text x="698.7" y="167.0" class="dato" text-anchor="end" style="fill:#ffffff">5142</text>
+<line x1="656" y1="176.0" x2="656" y2="200.0" stroke="#7b8794" stroke-width="1.5" marker-end="url(#flecha)"/>
+<text x="40.0" y="222.0" class="dato" text-anchor="start">Modalidad presencial</text>
+<text x="40.0" y="241.0" class="codigo" text-anchor="start">df[df['MODALIDAD'] == 'PRESENCIAL']</text>
+<rect x="470" y="206.0" width="372" height="26" rx="6" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="470" y="206.0" width="141.0" height="26" rx="6" fill="#2a78d6"/>
+<text x="601.0" y="225.0" class="dato" text-anchor="end" style="fill:#ffffff">3038</text>
+<line x1="656" y1="234.0" x2="656" y2="258.0" stroke="#7b8794" stroke-width="1.5" marker-end="url(#flecha)"/>
+<text x="40.0" y="280.0" class="dato" text-anchor="start">Financiamiento público</text>
+<text x="40.0" y="299.0" class="codigo" text-anchor="start">df[df['TIPO_FINANCIAMIENTO'] == 'PÚBLICA']</text>
+<rect x="470" y="264.0" width="372" height="26" rx="6" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="470" y="264.0" width="62.2" height="26" rx="6" fill="#2a78d6"/>
+<text x="542.2" y="283.0" class="dato" text-anchor="start">1340</text>
+<line x1="656" y1="292.0" x2="656" y2="316.0" stroke="#7b8794" stroke-width="1.5" marker-end="url(#flecha)"/>
+<text x="40.0" y="338.0" class="dato" text-anchor="start">Universidad, no instituto</text>
+<text x="40.0" y="357.0" class="codigo" text-anchor="start">df[df['TIPO_IES'] == 'UNIVERSIDAD']</text>
+<rect x="470" y="322.0" width="372" height="26" rx="6" fill="#f5f7fa" stroke="#d9e2ec"/>
+<rect x="470" y="322.0" width="43.6" height="26" rx="6" fill="#2a78d6"/>
+<text x="523.6" y="341.0" class="dato" text-anchor="start">939</text>
+<rect x="40.0" y="376.0" width="820.0" height="40.0" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="58.0" y="401.0" class="etiqueta" text-anchor="start">No es machine learning: es el recorte que deja al motor trabajar solo sobre lo que el estudiante sí puede estudiar.</text>
+</svg>
