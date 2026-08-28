@@ -21,8 +21,9 @@ Orientación vocacional con Machine Learning sobre datos abiertos de Ecuador
 
 <br>
 
-**Arturo Rodríguez, PhD** · ULEAM
-Programación para Inteligencia Artificial
+**Arturo Rodríguez, PhD** · Programación para Inteligencia Artificial
+
+<div class="text-sm opacity-70">ULEAM · Universidad UTE · ISPADE · Universidad del País Vasco</div>
 
 <div class="pt-8 text-sm text-gray-500 dark:text-gray-400">
 tucarrera-ecuador.vercel.app
@@ -500,6 +501,8 @@ class: text-center
 
 # Gracias
 
-**Arturo Rodríguez, PhD** ([ORCID 0000-0002-7017-9443](https://orcid.org/0000-0002-7017-9443)) — ULEAM
+**Arturo Rodríguez, PhD** ([ORCID 0000-0002-7017-9443](https://orcid.org/0000-0002-7017-9443))
+
+<div class="text-sm opacity-70">ULEAM · Universidad UTE · ISPADE · Universidad del País Vasco</div>
 
 tucarrera-ecuador.vercel.app
