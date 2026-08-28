@@ -150,6 +150,23 @@ cada una mientras el estudiante responde. Instrumento: O*NET Interest Profiler S
 -->
 
 ---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">RIASEC · el hexágono de Holland</div>
+
+<img src="/diagramas/riasec-hexagono.jpg" alt="Hexágono RIASEC de Holland y esquema de similitud coseno contra perfiles de carrera"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+Izquierda: el hexágono de Holland -- dimensiones adyacentes son afines, opuestas son
+antagónicas. Derecha: el mismo perfil visto como vector de 6 dimensiones, que es como
+lo trata el motor. La tabla de la derecha es ilustrativa (valores de ejemplo).
+-->
+
+---
 
 # Filtros booleanos de pandas reducen el pool antes de calcular similitud
 
@@ -162,6 +179,23 @@ No es machine learning -- es álgebra de conjuntos sobre un DataFrame (modalidad
 / a distancia / en línea / híbrida; financiamiento pública / particular; tipo de IES
 universidad / instituto; nivel de formación, por defecto excluye posgrado). Pero reduce el
 espacio de búsqueda antes de que el resto de los algoritmos trabajen.
+-->
+
+---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">Filtro duro · máscaras booleanas en pandas</div>
+
+<img src="/diagramas/filtrado-pandas.jpg" alt="Flujo de filtrado booleano con pandas: dataset completo, máscaras por criterio, dataset refinado"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+Recorrido: DataFrame completo -> una máscara booleana por criterio -> combinación con &
+-> DataFrame refinado. Las filas de ejemplo del diagrama son ilustrativas (no son la
+oferta real de SENESCYT).
 -->
 
 ---
@@ -186,6 +220,23 @@ en C (Convencional) -- aunque comparten el mismo campo amplio.
 -->
 
 ---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">Vector de carrera · 85% campo amplio + 15% TF-IDF</div>
+
+<img src="/diagramas/tfidf-campo-amplio.jpg" alt="Construcción del vector de carrera: TF-IDF sobre el nombre combinado con los anclajes RIASEC del campo amplio"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+Izquierda: el nombre de la carrera pasa por TF-IDF -> matriz de términos. Derecha: se
+mezcla con el vector RIASEC heredado del campo amplio. Resultado: un vector por carrera,
+no uno por campo. Ese 15% es lo que desempata las 338 administraciones.
+-->
+
+---
 
 # NearestNeighbors devuelve el ranking completo, no un top-k
 
@@ -202,6 +253,23 @@ necesita el frontend para su slider de "afinidad mínima".
 -->
 
 ---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">Similitud coseno · ángulo entre perfil y carrera</div>
+
+<img src="/diagramas/similitud-coseno.jpg" alt="Similitud coseno entre el vector del estudiante y los vectores de carrera, y esquema de NearestNeighbors"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+El punto: lo que importa es el ÁNGULO, no la magnitud. Ángulo chico -> cos(theta) cerca
+de 1 -> perfiles parecidos. Un estudiante que respondió que sí a muchas cosas no queda
+favorecido solo por eso. Abajo a la derecha, la misma idea vista como vecinos cercanos.
+-->
+
+---
 
 # Haversine mide la distancia real entre cantones
 
@@ -213,6 +281,23 @@ Cantón del estudiante vs. cantón de cada oferta → distancia → score 0-1
 <!--
 Función haversine_km(). La distancia se invierte y escala 0-1 con MinMaxScaler para
 convertirla en un score de cercanía, comparable con la similitud RIASEC.
+-->
+
+---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">Haversine · distancia sobre la esfera</div>
+
+<img src="/diagramas/haversine.jpg" alt="Fórmula de Haversine aplicada a Quito y Guayaquil, y normalización MinMaxScaler de la distancia"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+Ejemplo con Quito y Guayaquil. La distancia es el arco de gran círculo, no la línea
+recta. Abajo: la distancia se invierte y se escala a [0,1] con MinMaxScaler, para que
+sea comparable con la similitud RIASEC en el score final.
 -->
 
 ---
@@ -231,6 +316,23 @@ con un slider en el frontend (0 a 1).
 -->
 
 ---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">Score final · combinación, deduplicación y ranking</div>
+
+<img src="/diagramas/score-deduplicacion.jpg" alt="Score RIASEC y score de cercanía combinados en un score final, con deduplicación y ranking"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+Los dos scores entran ponderados al score final; después se deduplica con
+drop_duplicates y se ordena. Lo que sale de buscar() es ese ranking completo, sin
+recortar. Las filas del diagrama son de ejemplo, no la oferta real.
+-->
+
+---
 
 # KMeans agrupa carreras para explorar, no para recomendar
 
@@ -244,6 +346,23 @@ No es una búsqueda puntual -- KMeans opera sobre el mismo espacio de 6 dimensio
 (R,I,A,S,E,C) pero no participa del score_final. buscar() no diversifica ni recorta:
 devuelve todo el pool filtrado, ordenado por score_final -- el frontend decide cuánto
 mostrar con el slider de afinidad mínima.
+-->
+
+---
+layout: default
+class: diagrama
+---
+
+<div class="text-xs uppercase tracking-widest opacity-60 mb-3">KMeans · clústeres vocacionales proyectados con PCA</div>
+
+<img src="/diagramas/kmeans-pca.jpg" alt="Agrupamiento KMeans de carreras en el espacio RIASEC, proyectado a 2D con PCA"
+     class="block mx-auto max-w-full rounded-lg shadow-md"
+     style="max-height: 26rem" />
+
+<!--
+El espacio real es de 6 dimensiones; PCA es solo para poder dibujarlo. Los clústeres del
+diagrama (social, técnico, artes, ciencias) son ilustrativos del tipo de familias que
+salen. Sirve para explorar por familia, no para el ranking puntual.
 -->
 
 ---
