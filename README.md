@@ -19,7 +19,7 @@ data/
   processed/      Salidas del pipeline de limpieza (CSV + SQLite), se regeneran con los scripts
 src/
   01_limpiar_oferta.py        Normaliza el Excel de SENESCYT (tildes, CAMPO_AMPLIO, nivel)
-  02_cantones_coordenadas.py  Cruza los 99 cantones de la base con coordenadas (lat/lon)
+  02_cantones_coordenadas.py  Cruza los 98 cantones de la base con coordenadas (lat/lon)
   03_mapeo_riasec.py          Tabla curada: campo amplio -> pesos RIASEC (6 dimensiones)
   04_motor_recomendacion.py   Motor de recomendación (filtros + NearestNeighbors + KMeans)
   05_demo.py                  Corre todo el pipeline y prueba el motor con perfiles de ejemplo

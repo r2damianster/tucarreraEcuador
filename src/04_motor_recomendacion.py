@@ -101,6 +101,9 @@ class Preferencias:
 
 class MotorRecomendacion:
     def __init__(self, oferta: pd.DataFrame, cantones: pd.DataFrame, mapeo: pd.DataFrame):
+        # Una fila de coordenadas por cantón: si la tabla trajera la clave
+        # repetida, el merge duplicaría toda la oferta de ese cantón.
+        cantones = cantones.drop_duplicates(subset=["provincia_key", "canton_key"])
         self.oferta = oferta.merge(
             cantones[["provincia_key", "canton_key", "lat", "lon"]],
             left_on=["PROVINCIA_KEY", "CANTON_KEY"],

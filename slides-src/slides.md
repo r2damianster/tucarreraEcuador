@@ -112,7 +112,7 @@ NearestNeighbors + Haversine + KMeans.
 
 ---
 
-# 8014 carreras, 99 cantones, un solo cruce posible hoy
+# 8014 carreras, 98 cantones, un solo cruce posible hoy
 
 <div grid="~ cols-3 gap-4" class="pt-4">
 <div class="p-4 rounded bg-blue-500/10 border border-blue-500/30">
@@ -123,7 +123,7 @@ carreras vigentes
 </div>
 <div class="p-4 rounded bg-orange-500/10 border border-orange-500/30">
 
-### 99
+### 98
 cantones con coordenadas
 
 </div>

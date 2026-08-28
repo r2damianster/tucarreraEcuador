@@ -84,6 +84,28 @@ def normalizar_campo_amplio(valor: str) -> str:
     return MAPA_CAMPO_AMPLIO[clave]
 
 
+def canonizar_grafia(df, columna_visible: str, columna_clave: str):
+    """Unifica la grafía visible de un lugar dentro de cada clave sin tildes.
+
+    La base de SENESCYT trae el mismo cantón escrito de dos formas (p. ej.
+    "SAMBORONDÓN" en 355 filas y "SAMBORONDON" en 1). Ambas comparten
+    CANTON_KEY, así que sin unificar la grafía el cantón se cuenta dos veces
+    y la tabla de coordenadas termina con la clave duplicada -- lo que en el
+    motor duplica por merge toda la oferta de ese cantón. Nos quedamos con la
+    grafía más frecuente.
+    """
+    frecuencias = (
+        df.groupby([columna_clave, columna_visible]).size()
+        .rename("filas").reset_index()
+        .sort_values([columna_clave, "filas"], ascending=[True, False])
+    )
+    grafia_canonica = (
+        frecuencias.drop_duplicates(columna_clave)
+        .set_index(columna_clave)[columna_visible]
+    )
+    return df[columna_clave].map(grafia_canonica)
+
+
 def main():
     df = pd.read_excel(RAW_XLSX)
     print(f"Filas leídas: {len(df)}")
@@ -103,6 +125,11 @@ def main():
     # Clave de emparejamiento cantón (sin tildes) para cruzar con la tabla de coordenadas
     df["CANTON_KEY"] = df["CANTÓN"].apply(quitar_tildes)
     df["PROVINCIA_KEY"] = df["PROVINCIA"].apply(quitar_tildes)
+
+    # Una sola grafía visible por clave, para no contar dos veces el mismo cantón
+    df["CANTÓN"] = canonizar_grafia(df, "CANTÓN", "CANTON_KEY")
+    df["PROVINCIA"] = canonizar_grafia(df, "PROVINCIA", "PROVINCIA_KEY")
+    print(f"Cantones únicos: {df['CANTON_KEY'].nunique()}")
 
     resumen = df["CAMPO_AMPLIO_NORMALIZADO"].value_counts()
     print("\nDistribución por campo amplio normalizado:")
