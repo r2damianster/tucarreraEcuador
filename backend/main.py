@@ -53,6 +53,58 @@ app.add_middleware(
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODELOS_URL = "https://api.groq.com/openai/v1/models"
+
+# Groq retira modelos cada cierto tiempo y responde 404 al pedir uno
+# decomisado -- así se rompió este endpoint en silencio. En vez de confiar en
+# un nombre fijo, se consulta la lista viva de modelos y se elige el primero
+# de estas preferencias que siga disponible. Si ninguno está, se toma
+# cualquier modelo de texto de la cuenta (ver _elegir_modelo).
+GROQ_MODELOS_PREFERIDOS = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+]
+# Modelos que no sirven para chat (audio, moderación, embeddings).
+_PREFIJOS_MODELO_NO_CHAT = ("whisper", "distil-whisper", "playai-tts", "meta-llama/llama-guard", "meta-llama/llama-prompt-guard")
+
+_modelo_resuelto: Optional[str] = None
+
+
+def _listar_modelos_groq() -> list[str]:
+    """IDs de los modelos que la cuenta de Groq tiene disponibles hoy."""
+    respuesta = httpx.get(
+        GROQ_MODELOS_URL,
+        headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+        timeout=10.0,
+    )
+    respuesta.raise_for_status()
+    return [m["id"] for m in respuesta.json().get("data", [])]
+
+
+def _elegir_modelo(forzar_refresco: bool = False) -> str:
+    """Modelo de chat a usar. Se cachea en memoria: la lista de Groq sólo se
+    consulta la primera vez, o cuando una llamada falló con 404 (modelo
+    retirado) y hay que volver a resolver."""
+    global _modelo_resuelto
+    if _modelo_resuelto and not forzar_refresco:
+        return _modelo_resuelto
+
+    disponibles = _listar_modelos_groq()
+    candidatos = [GROQ_MODEL] + [m for m in GROQ_MODELOS_PREFERIDOS if m != GROQ_MODEL]
+    for candidato in candidatos:
+        if candidato in disponibles:
+            _modelo_resuelto = candidato
+            return _modelo_resuelto
+
+    for modelo in disponibles:
+        if not modelo.startswith(_PREFIJOS_MODELO_NO_CHAT):
+            _modelo_resuelto = modelo
+            print(f"[comentario-perfil] ningún modelo preferido disponible; usando '{modelo}'")
+            return _modelo_resuelto
+
+    raise RuntimeError("La cuenta de Groq no expone ningún modelo de chat utilizable.")
 
 _motor: Optional["motor_mod.MotorRecomendacion"] = None
 
@@ -206,22 +258,59 @@ def comentario_perfil(payload: ComentarioPerfilIn):
     )
 
     try:
+        comentario = _pedir_comentario_a_groq(prompt)
+    except Exception as e:
+        print(f"[comentario-perfil] no se pudo generar: {e}")
+        raise HTTPException(503, "No se pudo generar el comentario en este momento.")
+
+    return {"comentario": comentario}
+
+
+def _pedir_comentario_a_groq(prompt: str) -> str:
+    """Llama a Groq con el modelo resuelto. Si Groq responde 404 (el modelo
+    fue retirado entre dos llamadas), vuelve a resolver el modelo y reintenta
+    una sola vez."""
+    for intento in range(2):
+        modelo = _elegir_modelo(forzar_refresco=intento > 0)
         respuesta = httpx.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
             json={
-                "model": GROQ_MODEL,
+                "model": modelo,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 300,
                 "temperature": 0.7,
             },
             timeout=20.0,
         )
-        respuesta.raise_for_status()
-        datos = respuesta.json()
-        comentario = datos["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        print(f"[comentario-perfil] no se pudo generar: {e}")
-        raise HTTPException(503, "No se pudo generar el comentario en este momento.")
+        if respuesta.status_code == 404 and intento == 0:
+            print(f"[comentario-perfil] Groq no reconoce el modelo '{modelo}': {respuesta.text[:300]}")
+            continue
+        if respuesta.status_code >= 400:
+            # El cuerpo trae el motivo real (modelo decomisado, cuota agotada,
+            # key inválida); raise_for_status solo lo tiraba a la basura.
+            raise RuntimeError(f"Groq {respuesta.status_code}: {respuesta.text[:300]}")
+        return respuesta.json()["choices"][0]["message"]["content"].strip()
 
-    return {"comentario": comentario}
+    raise RuntimeError("Groq rechazó todos los modelos probados.")
+
+
+@app.get("/api/diagnostico-ia")
+def diagnostico_ia():
+    """Estado de la integración con Groq, para diagnosticar sin entrar al
+    servidor. NO expone la API key: sólo si está presente y su longitud."""
+    estado = {
+        "key_configurada": bool(GROQ_API_KEY),
+        "key_longitud": len(GROQ_API_KEY) if GROQ_API_KEY else 0,
+        "modelo_preferido": GROQ_MODEL,
+        "modelo_en_uso": _modelo_resuelto,
+    }
+    if not GROQ_API_KEY:
+        estado["error"] = "Falta GROQ_API_KEY en el entorno del backend."
+        return estado
+    try:
+        estado["modelos_disponibles"] = sorted(_listar_modelos_groq())
+        estado["modelo_en_uso"] = _elegir_modelo(forzar_refresco=True)
+    except Exception as e:
+        estado["error"] = str(e)[:300]
+    return estado
