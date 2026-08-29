@@ -15,17 +15,25 @@ const estado = {
   preferenciasActuales: null,
 };
 
+// Control de la búsqueda en vuelo. Cambiar filtros dispara llamadas al
+// backend que tardan; sin esto el usuario ve la pantalla "congelada" y las
+// respuestas lentas pueden pisar a las recientes.
+let peticionEnCurso = null;      // AbortController de la búsqueda actual
+let temporizadorRefetch = null;  // debounce de los cambios de filtro
+let temporizadorAvisoLento = null;
+
 // ---------- Utilidades ----------
 async function apiGet(ruta) {
   const r = await fetch(`${API_BASE}${ruta}`);
   if (!r.ok) throw new Error(`GET ${ruta} -> ${r.status}`);
   return r.json();
 }
-async function apiPost(ruta, body) {
+async function apiPost(ruta, body, signal) {
   const r = await fetch(`${API_BASE}${ruta}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal,
   });
   if (!r.ok) {
     const detalle = await r.text();
@@ -135,7 +143,7 @@ async function cargarOpciones() {
     // resultados calculados con cercanía, hay que recalcularlos.
     const habiaPeso = Number(document.getElementById("pref-cercania").value) > 0;
     sincronizarCercania();
-    if (habiaPeso && estado.perfilRiasec) verResultados();
+    if (habiaPeso) programarRefetch();
   });
 
   // El cantón es el origen del cálculo de distancia (Haversine en el motor):
@@ -155,9 +163,7 @@ async function cargarOpciones() {
   // mouse) es lo que dispara la búsqueda, para no repetirla en cada pixel.
   ["pref-modalidad", "pref-financiamiento", "pref-tipo-ies", "pref-nivel", "pref-canton", "pref-cercania"]
     .forEach((id) => {
-      document.getElementById(id).addEventListener("change", () => {
-        if (estado.perfilRiasec) verResultados();
-      });
+      document.getElementById(id).addEventListener("change", programarRefetch);
     });
 }
 
@@ -216,13 +222,29 @@ async function verResultados() {
   estado.preferenciasActuales = preferencias;
   renderFiltrosActivos();
   reiniciarComentarioIA();
-
-  const cont = document.getElementById("lista-resultados");
-  cont.innerHTML = `<p class="aviso">Buscando...</p>`;
   mostrarPantalla("resultados");
 
+  // Si ya había una búsqueda en vuelo se cancela: mover el slider o tocar
+  // varios filtros seguidos genera varias llamadas, y sin esto la respuesta
+  // más lenta podía llegar última y pisar a la más reciente.
+  if (peticionEnCurso) peticionEnCurso.abort();
+  const controlador = new AbortController();
+  peticionEnCurso = controlador;
+
+  const cont = document.getElementById("lista-resultados");
+  const esPrimeraBusqueda = estado.resultadosCompletos.length === 0;
+  // Sólo en la primera búsqueda no hay nada que conservar. En las siguientes
+  // se dejan los resultados anteriores a la vista (atenuados) para que el
+  // cambio de filtro no vacíe la pantalla.
+  if (esPrimeraBusqueda) cont.innerHTML = `<p class="aviso">Buscando...</p>`;
+  iniciarIndicadorBusqueda(esPrimeraBusqueda);
+
   try {
-    const data = await apiPost("/api/recomendar", { perfil_riasec: estado.perfilRiasec, preferencias });
+    const data = await apiPost(
+      "/api/recomendar",
+      { perfil_riasec: estado.perfilRiasec, preferencias },
+      controlador.signal
+    );
     // La API devuelve TODO lo que pasa el filtro duro, ordenado por score_final
     // -- ninguna diversificación ni tope acá. El filtro de "afinidad mínima"
     // (slider) decide en el cliente cuánto de esto se muestra, sin volver a
@@ -230,8 +252,57 @@ async function verResultados() {
     estado.resultadosCompletos = data.resultados;
     aplicarFiltroAfinidad();
   } catch (e) {
-    cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
+    // AbortError = la reemplazó una búsqueda más nueva; no es un fallo que
+    // haya que mostrarle al estudiante.
+    if (e.name !== "AbortError") {
+      cont.innerHTML = `<p class="error">No se pudo obtener recomendaciones: ${e.message}</p>`;
+    }
+  } finally {
+    // Sólo apaga el indicador si esta sigue siendo la búsqueda vigente: si
+    // otra la reemplazó, esa otra es la que manda sobre el indicador.
+    if (peticionEnCurso === controlador) {
+      peticionEnCurso = null;
+      detenerIndicadorBusqueda();
+    }
   }
+}
+
+// Los cambios de filtro se agrupan: arrastrar el slider o tocar dos selects
+// seguidos hace una sola llamada al backend en vez de una por evento.
+function programarRefetch() {
+  if (!estado.perfilRiasec) return;
+  clearTimeout(temporizadorRefetch);
+  temporizadorRefetch = setTimeout(verResultados, 250);
+}
+
+function iniciarIndicadorBusqueda(esPrimeraBusqueda) {
+  const panel = document.querySelector(".resultados-principal");
+  const banner = document.getElementById("banner-busqueda");
+  const texto = document.getElementById("banner-busqueda-texto");
+
+  panel.classList.toggle("actualizando", !esPrimeraBusqueda);
+  panel.setAttribute("aria-busy", "true");
+  texto.textContent = esPrimeraBusqueda
+    ? "Buscando carreras para tu perfil..."
+    : "Actualizando resultados con los filtros nuevos...";
+  banner.hidden = false;
+
+  clearTimeout(temporizadorAvisoLento);
+  // El backend está en un plan gratuito que se duerme por inactividad: la
+  // primera llamada tras un rato puede tardar decenas de segundos. Sin este
+  // aviso parece que la app se colgó y el estudiante recarga la página.
+  temporizadorAvisoLento = setTimeout(() => {
+    texto.textContent =
+      "Está tardando más de lo normal (el servidor puede estar despertando). Seguí esperando, no hace falta recargar.";
+  }, 4000);
+}
+
+function detenerIndicadorBusqueda() {
+  clearTimeout(temporizadorAvisoLento);
+  const panel = document.querySelector(".resultados-principal");
+  panel.classList.remove("actualizando");
+  panel.removeAttribute("aria-busy");
+  document.getElementById("banner-busqueda").hidden = true;
 }
 
 function renderFiltrosActivos() {

@@ -118,6 +118,14 @@
       </aside>
 
       <div class="resultados-principal">
+        <!-- Aviso de "estoy recalculando": se muestra mientras el backend
+             responde, sin borrar los resultados anteriores, para que cambiar
+             un filtro no parezca que la app se colgó. -->
+        <div class="banner-busqueda" id="banner-busqueda" role="status" aria-live="polite" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="banner-busqueda-texto">Actualizando recomendaciones...</span>
+        </div>
+
         <div class="card">
           <h2>Carreras recomendadas para ti</h2>
           <p class="aviso">Ordenadas según tu perfil vocacional y tus preferencias.</p>

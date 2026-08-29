@@ -320,3 +320,51 @@ input[type="range"]:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 .dv-leyenda .item { display: flex; align-items: center; gap: 6px; }
 .dv-leyenda .swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ---------- Indicador de "recalculando" ---------- */
+/* El backend tarda en responder cada vez que cambia un filtro. En vez de
+   vaciar la pantalla (que se lee como "se colgó"), se deja el resultado
+   anterior atenuado y se muestra este banner pegado arriba. */
+.banner-busqueda {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 0.88rem;
+}
+.banner-busqueda[hidden] { display: none; }
+
+.banner-busqueda .spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* Resultados anteriores mientras llega la respuesta nueva: visibles pero
+   claramente "en pausa", y no clicables para que nadie interactúe con
+   datos que están por ser reemplazados. */
+.resultados-principal.actualizando #lista-resultados,
+.resultados-principal.actualizando #card-diagrama {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-busqueda .spinner { animation: none; }
+  .resultados-principal.actualizando #lista-resultados,
+  .resultados-principal.actualizando #card-diagrama { transition: none; }
+}
