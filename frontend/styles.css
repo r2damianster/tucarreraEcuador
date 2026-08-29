@@ -168,6 +168,10 @@ select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; borde
 
 .slider-valor { font-size: 0.85rem; color: var(--ink-soft); margin-top: 4px; }
 
+/* Sin cantón elegido no hay desde dónde medir distancia: el slider de
+   cercanía se muestra apagado hasta que el estudiante indique dónde vive. */
+input[type="range"]:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .filtros-activos {
   display: flex;
   flex-wrap: wrap;

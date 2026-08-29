@@ -239,9 +239,14 @@ class MotorRecomendacion:
         pool["similitud_riasec"] = similitud
 
         pool["score_cercania"] = self._score_cercania(pool, prefs).values
+        # Sin cantón de referencia no hay distancia que medir: score_cercania
+        # es 0 para todo el pool, así que aplicar el peso sólo escalaría todos
+        # los score_final hacia abajo (y con peso 1.0 los dejaría en 0) sin
+        # aportar ningún criterio geográfico. En ese caso el peso se ignora.
+        peso_cercania = prefs.peso_cercania if prefs.canton_estudiante else 0.0
         pool["score_final"] = (
-            (1 - prefs.peso_cercania) * pool["similitud_riasec"]
-            + prefs.peso_cercania * pool["score_cercania"]
+            (1 - peso_cercania) * pool["similitud_riasec"]
+            + peso_cercania * pool["score_cercania"]
         )
         pool = pool.sort_values("score_final", ascending=False)
 

@@ -130,14 +130,23 @@ async function cargarOpciones() {
   document.getElementById("pref-provincia").addEventListener("change", (ev) => {
     const cantones = estado.cantonesPorProvincia[ev.target.value] || [];
     llenarSelect("pref-canton", cantones);
+    // Cambiar de provincia vacía el cantón, así que el slider de cercanía
+    // vuelve a quedar sin punto de referencia: se apaga y, si ya había
+    // resultados calculados con cercanía, hay que recalcularlos.
+    const habiaPeso = Number(document.getElementById("pref-cercania").value) > 0;
+    sincronizarCercania();
+    if (habiaPeso && estado.perfilRiasec) verResultados();
   });
 
+  // El cantón es el origen del cálculo de distancia (Haversine en el motor):
+  // sin él, "importancia de cercanía" no tiene desde dónde medir. Este
+  // listener se registra antes que el de refetch de más abajo, para que el
+  // slider ya esté sincronizado cuando se dispare la búsqueda.
+  document.getElementById("pref-canton").addEventListener("change", sincronizarCercania);
+
   const rango = document.getElementById("pref-cercania");
-  rango.addEventListener("input", () => {
-    const v = Number(rango.value);
-    document.getElementById("valor-cercania").textContent =
-      v === 0 ? "Indiferente (0%)" : `${v}% de importancia`;
-  });
+  rango.addEventListener("input", actualizarEtiquetaCercania);
+  sincronizarCercania();
 
   // El panel de filtros vive en la pantalla de resultados (ver
   // panel-filtros en index.html): cambiar cualquiera de estos vuelve a
@@ -150,6 +159,29 @@ async function cargarOpciones() {
         if (estado.perfilRiasec) verResultados();
       });
     });
+}
+
+// Habilita el slider de cercanía sólo si hay cantón elegido; si no lo hay,
+// lo apaga y lo devuelve a 0 para que no quede un peso "fantasma" que el
+// motor traduciría en score_cercania = 0 para todas las carreras (hundiendo
+// el score_final de todo el pool sin ningún criterio geográfico real).
+function sincronizarCercania() {
+  const rango = document.getElementById("pref-cercania");
+  const hayCanton = Boolean(valorOVacio("pref-canton"));
+  rango.disabled = !hayCanton;
+  if (!hayCanton) rango.value = 0;
+  actualizarEtiquetaCercania();
+}
+
+function actualizarEtiquetaCercania() {
+  const rango = document.getElementById("pref-cercania");
+  const valor = Number(rango.value);
+  const etiqueta = document.getElementById("valor-cercania");
+  if (rango.disabled) {
+    etiqueta.textContent = "Elige tu provincia y cantón para activar la cercanía";
+    return;
+  }
+  etiqueta.textContent = valor === 0 ? "Indiferente (0%)" : `${valor}% de importancia`;
 }
 
 function llenarSelect(idSelect, valores) {
